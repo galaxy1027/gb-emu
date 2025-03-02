@@ -12,4 +12,6 @@ int main(int argc, char **argv)
     cpu->DE = 0x90AB;
     cpu->HL = 0xCDEF;
     cpu->PrintRegisters();
+
+    cpu->mem->LoadRom(argv[1]);
 }

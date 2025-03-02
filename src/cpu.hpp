@@ -12,12 +12,12 @@ public:
     uint16_t BC;
     uint16_t DE;
     uint16_t HL;
+    Memory *mem;
 
 private:
     uint16_t PC;
     uint16_t SP;
     byte opcode;
-    Memory *mem;
 
 public:
     CPU()
