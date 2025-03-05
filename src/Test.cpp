@@ -13,5 +13,5 @@ int main(int argc, char **argv)
     cpu->HL = 0xCDEF;
     cpu->PrintRegisters();
 
-    cpu->mem->LoadRom(argv[1]);
+    cpu->mem.LoadRom(argv[1]);
 }
