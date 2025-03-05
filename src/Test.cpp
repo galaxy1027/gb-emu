@@ -1,17 +1,15 @@
 #include <iostream>
-#include "cpu.hpp"
-#include "mem.hpp"
+#include "gb.hpp"
 
 int main(int argc, char **argv)
 {
     std::cout << "--Register Tests--\n";
 
-    CPU *cpu = new CPU();
-    cpu->AF = 0x1234;
-    cpu->BC = 0x5678;
-    cpu->DE = 0x90AB;
-    cpu->HL = 0xCDEF;
-    cpu->PrintRegisters();
+    GameBoy *emu = new GameBoy();
+    emu->WriteRegister(AF, 0x1234);
+    emu->WriteRegister(BC, 0x5678);
+    emu->WriteRegister(DE, 0x90AB);
+    emu->WriteRegister(HL, 0xCDEF);
 
-    cpu->mem.LoadRom(argv[1]);
+    emu->PrintRegisters();
 }
