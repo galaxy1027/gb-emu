@@ -132,5 +132,11 @@ $RECYCLE.BIN/
 
 _NCrunch*
 
-# Rom files
-*.gb
+# ROM files
+*.gb 
+# Object files
+*.o
+# Executables
+*[^.]
+*.exe
+
