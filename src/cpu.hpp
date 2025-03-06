@@ -5,12 +5,12 @@
 
 class CPU {
 public:
-    reg AF;
-    reg BC;
-    reg DE;
-    reg HL;
-    reg PC;
-    reg SP;
+    uint16_t AF;
+    uint16_t BC;
+    uint16_t DE;
+    uint16_t HL;
+    uint16_t PC;
+    uint16_t SP;
 private:
     byte opcode;
 
