@@ -10,6 +10,11 @@ GameBoy::GameBoy() {
     this->memory_map = new Memory();
 }
 
+GameBoy::~GameBoy() {
+    delete this->cpu;
+    delete this->memory_map;
+}
+
 int GameBoy::LoadRom(std::string path) {
     return this->memory_map->LoadRom(path);
 }
@@ -18,24 +23,31 @@ int GameBoy::LoadRom(std::string path) {
     Reads a byte from the program counter (PC)'s location and stores it.
     Also increments the PC once completed.
 */
-void GameBoy::Fetch() {
-    this->opcode = memory_map->ReadByte(cpu->PC);
+byte GameBoy::Fetch() {
+    byte out = memory_map->ReadByte(cpu->PC);
     cpu->PC++;
+    return out;
 }
 
 /*
     Execute
 */
-void GameBoy::Execute() {
-    switch (this->opcode) {
-        case 0x00:
+void GameBoy::Execute(byte opcode) {
+    switch (opcode) {
+        case 0x00: // NOP
             break;
+        case 0x31: { // LD SP, u16
+            byte lower = Fetch();
+            byte upper = Fetch();
+            cpu->SP = ((uint16_t)lower) | ((uint16_t)upper << 8);
+            std::cout <<"Stack Pointer:"<< std::hex << cpu->SP << '\n';
+            break;
+        }
         default:
             std::cerr << "Error: OpCode not implemented yet\n";
             break;
     }
 }
-
 
 void GameBoy::WriteRegister(register_select_t registerName, uint16_t value) {
     switch (registerName) {
@@ -51,17 +63,19 @@ void GameBoy::WriteRegister(register_select_t registerName, uint16_t value) {
         case HL:
             this->cpu->HL = value;
             break;
-        defualt:
+        default:
             std::cerr << "Error: Register does not exist\n";
     }
 }
 
 void GameBoy::PrintRegisters() {
     std::cout << "-- Registers --\n"
-    << "AF: 0x" << std::hex << cpu->AF << '\n'
-    << "BC: 0x" << std::hex << cpu->BC << '\n'
-    << "DE: 0x" << std::hex << cpu->DE << '\n'
-    << "HL: 0x" << std::hex << cpu->HL << '\n';
+    << "AF: 0x" << std::hex << std::setfill('0') << std::setw(4) << cpu->AF << '\n'
+    << "BC: 0x" << std::hex << std::setfill('0') << std::setw(4) << cpu->BC << '\n'
+    << "DE: 0x" << std::hex << std::setfill('0') << std::setw(4) << cpu->DE << '\n'
+    << "HL: 0x" << std::hex << std::setfill('0') << std::setw(4) << cpu->HL << '\n'
+    << "SP: 0x" << std::hex << std::setfill('0') << std::setw(4) << cpu->SP << '\n'
+    << "PC: 0x" << std::hex << std::setfill('0') << std::setw(4) << cpu->PC << '\n';
 }
 
 void GameBoy::PrintMemory(uint16_t start_address, unsigned int bytes) {

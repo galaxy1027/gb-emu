@@ -10,12 +10,12 @@ class GameBoy {
 private:
     CPU *cpu;
     Memory *memory_map;
-    byte opcode;
 public:
     GameBoy();
+    ~GameBoy();
     int LoadRom(std::string path);
-    void Fetch();
-    void Execute();
+    byte Fetch();
+    void Execute(byte opcode);
     void WriteRegister(register_select_t registerName, uint16_t value);
     void PrintRegisters();
     void PrintMemory(uint16_t address, unsigned int bytes);
