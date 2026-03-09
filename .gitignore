@@ -41,3 +41,8 @@
 *.dwo
 
 build/
+GameboyEmu
+.*/
+CMakeCache.txt
+cmake_install.cmake
+CMakeFiles/
