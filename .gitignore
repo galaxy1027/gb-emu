@@ -46,3 +46,6 @@ GameboyEmu
 CMakeCache.txt
 cmake_install.cmake
 CMakeFiles/
+Makefile
+compile_commands.json
+
