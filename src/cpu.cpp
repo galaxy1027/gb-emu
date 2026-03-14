@@ -7,15 +7,15 @@
 
 Cpu::Cpu() {
   memory.fill(0);
-  PC = 0x0100;
-  initOpcodeTable(opcodeTable);
+  PC.loadReg(0x1000);
+  initOpcodeTable();
   AF.loadReg(0x01B0);
   BC.loadReg(0x0013);
   DE.loadReg(0x00D8);
   HL.loadReg(0x014D);
 
-  SP = 0xFFFE;
-  PC = 0x0100;
+  SP.loadReg(0xFFFE);
+  PC.loadReg(0x0100);
 }
 
 int Cpu::loadRom(const std::string &path) {
@@ -44,42 +44,10 @@ uint16_t Cpu::fetch16() {
   uint8_t hi = fetch();
   return ((uint16_t)hi << 8) | lo;
 }
-
-void Cpu::op_0x00() {} // NOP
-void Cpu::op_0x01() {  // LD BC, d16
-  uint16_t d16 = fetch16();
-  BC.loadReg(d16);
-}
-void Cpu::op_0x02() { // LD (BC), A
-  uint16_t addr = BC.GetVal();
-  store8(AF.hi, addr);
-}
-void Cpu::op_0x03() { // INC BC
-  uint16_t data = BC.GetVal();
-  BC.loadReg(data + 1);
-}
-void Cpu::op_0x04() { // INC B
-  incReg(BC.hi);
-}
-void Cpu::op_0x05() { // DEC B
-  decReg(BC.hi);
-}
-void Cpu::op_0x06() { // LD B, d8
-  uint8_t d8 = fetch();
-  BC.hi = d8;
-}
-void Cpu::op_0x07() { // RLCA
-  RLCX(AF.hi);
-}
-void Cpu::op_0x08() { // LD (a16), SP
-  uint16_t a16 = fetch16();
-  store16(SP, a16);
-}
-
 void Cpu::execute(uint8_t opcode_fetched) {
   const struct opcode *op = &opcodeTable[opcode_fetched];
   if (op->handler) {
-    (this->*op->handler)();
+    (this->*op->handler)(opcode_fetched);
     std::cout << "Opcode 0x" << std::hex << (int)opcode_fetched << "\n";
   } else
     std::cout << "Unimplemented opcode 0x" << std::hex << (int)opcode_fetched
@@ -102,6 +70,7 @@ void Cpu::cycle() {
 void Cpu::writeByteMemory(uint8_t data, uint16_t address) {
   memory[address] = data;
 }
+uint8_t Cpu::readByteMemory(uint16_t addr) { return memory[addr]; }
 
 void Cpu::store8(uint8_t data, uint16_t address) {
   writeByteMemory(data, address);
@@ -112,11 +81,21 @@ void Cpu::store16(uint16_t data, uint16_t address) {
   writeByteMemory(lo, address);
   writeByteMemory(hi, address + 1);
 }
+
+uint8_t Cpu::read8(uint16_t addr) { return readByteMemory(addr); }
+uint16_t Cpu::read16(uint16_t addr) {
+  return ((uint16_t)readByteMemory(addr + 1) << 8) |
+         (uint16_t)readByteMemory(addr);
+}
+
 /*
- * Write Flag
- * Perform a bit shift to write to a specific bit in the Flags (F) register.
- * The bit numbers are specified in the Flag enum class.
+ * Read / Write Flag
+ * Perform a bit shift to read from or write to a specific bit in the Flags (F)
+ * register. The bit numbers are specified in the Flag enum class.
  */
+
+bool Cpu::readFlag(Flag F) { return (AF.lo >> static_cast<int>(F)) & 1; }
+
 void Cpu::writeFlag(Flag F, bool value) {
   if (value) {
     AF.lo |= 1 << static_cast<int>(F);
@@ -125,6 +104,8 @@ void Cpu::writeFlag(Flag F, bool value) {
   }
   AF.lo &= 0xF0;
 }
+void Cpu::load8(uint16_t addr, uint8_t &dest) { dest = read8(addr); }
+void Cpu::loadReg(uint16_t addr, Reg16 &dest) { dest.loadReg(read8(addr)); }
 
 /*
  * Increment / Decrement register
@@ -144,6 +125,18 @@ void Cpu::decReg(uint8_t &reg) {
   writeFlag(Flag::Z, reg == 0);
   writeFlag(Flag::N, 1);
   subSetH(oldVal, 1);
+}
+
+void Cpu::incReg16(Reg16 &reg) { reg.loadReg(reg.getVal() + 1); }
+void Cpu::decReg16(Reg16 &reg) { reg.loadReg(reg.getVal() - 1); }
+
+void Cpu::addReg16(Reg16 &source, Reg16 &dest) {
+  uint16_t srcVal = source.getVal(), dstVal = dest.getVal(),
+           sum = srcVal + dstVal;
+  addSetH(srcVal, dstVal);
+  writeFlag(Flag::N, 0);
+  writeFlag(Flag::C, (sum < srcVal));
+  dest.loadReg(sum);
 }
 
 /*
@@ -167,11 +160,35 @@ void Cpu::subSetH(uint8_t a, uint8_t b) {
  * The 7th bit is shifted out and rotated to bit 0.
  * It is also saved to flag C.
  */
-void Cpu::RLCX(uint8_t &reg) {
+void Cpu::rotateLeftThroughCarry(uint8_t &reg) {
   uint8_t oldBit7 = reg & 0x80;
   reg = (reg << 1) | (oldBit7 >> 7);
   writeFlag(Flag::Z, 0);
   writeFlag(Flag::N, 0);
   writeFlag(Flag::H, 0);
   writeFlag(Flag::C, oldBit7 != 0);
+}
+
+/*
+ * RRCX
+ * Works the same as RCLX, but shifts right
+ */
+void Cpu::rotateRightThroughCarry(uint8_t &reg) {
+  uint8_t oldBit0 = reg & 0x01;
+  reg = (reg >> 1) | (oldBit0 << 7);
+  writeFlag(Flag::Z, 0);
+  writeFlag(Flag::N, 0);
+  writeFlag(Flag::H, 0);
+  writeFlag(Flag::C, oldBit0 != 0);
+}
+
+void Cpu::rotateLeft(uint8_t &reg) {
+  bool oldCarry = readFlag(Flag::C);
+  writeFlag(Flag::C, (reg & 0x80) >> 7);
+  reg = (reg << 1) | (static_cast<uint8_t>(oldCarry));
+}
+void Cpu::rotateRight(uint8_t &reg) {
+  bool oldCarry = readFlag(Flag::C);
+  writeFlag(Flag::C, (reg & 0x01));
+  reg = (reg >> 1) | (static_cast<uint8_t>(oldCarry) << 7);
 }
