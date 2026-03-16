@@ -78,7 +78,7 @@ void Cpu::initOpcodeTable() {
   opcodeTable[0x43] = {"LD B, E", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x44] = {"LD B, H", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x45] = {"LD B, L", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x46] = {"LD B, (HL)", &Cpu::handler_LD_r8_r8, 4};
+  opcodeTable[0x46] = {"LD B, (HL)", &Cpu::handler_LD_r8_r8, 8};
   opcodeTable[0x47] = {"LD B, A", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x48] = {"LD C, B", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x49] = {"LD C, C", &Cpu::handler_LD_r8_r8, 4};
@@ -86,7 +86,7 @@ void Cpu::initOpcodeTable() {
   opcodeTable[0x4B] = {"LD C, E", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x4C] = {"LD C, H", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x4D] = {"LD C, L", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x4E] = {"LD C, (HL)", &Cpu::handler_LD_r8_r8, 4};
+  opcodeTable[0x4E] = {"LD C, (HL)", &Cpu::handler_LD_r8_r8, 8};
   opcodeTable[0x4F] = {"LD C, A", &Cpu::handler_LD_r8_r8, 4};
 
   opcodeTable[0x50] = {"LD D, B", &Cpu::handler_LD_r8_r8, 4};
@@ -95,7 +95,7 @@ void Cpu::initOpcodeTable() {
   opcodeTable[0x53] = {"LD D, E", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x54] = {"LD D, H", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x55] = {"LD D, L", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x56] = {"LD D, (HL)", &Cpu::handler_LD_r8_r8, 4};
+  opcodeTable[0x56] = {"LD D, (HL)", &Cpu::handler_LD_r8_r8, 8};
   opcodeTable[0x57] = {"LD D, A", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x58] = {"LD E, B", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x59] = {"LD E, C", &Cpu::handler_LD_r8_r8, 4};
@@ -103,7 +103,7 @@ void Cpu::initOpcodeTable() {
   opcodeTable[0x5B] = {"LD E, E", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x5C] = {"LD E, H", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x5D] = {"LD E, L", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x5E] = {"LD E, (HL)", &Cpu::handler_LD_r8_r8, 4};
+  opcodeTable[0x5E] = {"LD E, (HL)", &Cpu::handler_LD_r8_r8, 8};
   opcodeTable[0x5F] = {"LD E, A", &Cpu::handler_LD_r8_r8, 4};
 
   opcodeTable[0x60] = {"LD H, B", &Cpu::handler_LD_r8_r8, 4};
@@ -112,7 +112,7 @@ void Cpu::initOpcodeTable() {
   opcodeTable[0x63] = {"LD H, E", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x64] = {"LD H, H", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x65] = {"LD H, L", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x66] = {"LD H, (HL)", &Cpu::handler_LD_r8_r8, 4};
+  opcodeTable[0x66] = {"LD H, (HL)", &Cpu::handler_LD_r8_r8, 8};
   opcodeTable[0x67] = {"LD H, A", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x68] = {"LD L, B", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x69] = {"LD L, C", &Cpu::handler_LD_r8_r8, 4};
@@ -120,25 +120,93 @@ void Cpu::initOpcodeTable() {
   opcodeTable[0x6B] = {"LD L, E", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x6C] = {"LD L, H", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x6D] = {"LD L, L", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x6E] = {"LD L, (HL)", &Cpu::handler_LD_r8_r8, 4};
+  opcodeTable[0x6E] = {"LD L, (HL)", &Cpu::handler_LD_r8_r8, 8};
   opcodeTable[0x6F] = {"LD L, A", &Cpu::handler_LD_r8_r8, 4};
 
-  opcodeTable[0x70] = {"LD (HL), B", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x71] = {"LD (HL), C", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x72] = {"LD (HL), D", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x73] = {"LD (HL), E", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x74] = {"LD (HL), H", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x75] = {"LD (HL), L", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x76] = {"LD (HL), (HL)", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x77] = {"LD (HL), A", &Cpu::handler_LD_r8_r8, 4};
+  opcodeTable[0x70] = {"LD (HL), B", &Cpu::handler_LD_r8_r8, 8};
+  opcodeTable[0x71] = {"LD (HL), C", &Cpu::handler_LD_r8_r8, 8};
+  opcodeTable[0x72] = {"LD (HL), D", &Cpu::handler_LD_r8_r8, 8};
+  opcodeTable[0x73] = {"LD (HL), E", &Cpu::handler_LD_r8_r8, 8};
+  opcodeTable[0x74] = {"LD (HL), H", &Cpu::handler_LD_r8_r8, 8};
+  opcodeTable[0x75] = {"LD (HL), L", &Cpu::handler_LD_r8_r8, 8};
+  opcodeTable[0x76] = {"HALT", nullptr, 4};
+  opcodeTable[0x77] = {"LD (HL), A", &Cpu::handler_LD_r8_r8, 8};
   opcodeTable[0x78] = {"LD A, B", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x79] = {"LD A, C", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x7A] = {"LD A, D", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x7B] = {"LD A, E", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x7C] = {"LD A, H", &Cpu::handler_LD_r8_r8, 4};
   opcodeTable[0x7D] = {"LD A, L", &Cpu::handler_LD_r8_r8, 4};
-  opcodeTable[0x7E] = {"LD A, (HL)", &Cpu::handler_LD_r8_r8, 4};
+  opcodeTable[0x7E] = {"LD A, (HL)", &Cpu::handler_LD_r8_r8, 8};
   opcodeTable[0x7F] = {"LD A, A", &Cpu::handler_LD_r8_r8, 4};
+
+  opcodeTable[0x80] = {"ADD A, B", &Cpu::handler_ADD_r8_r8, 4};
+  opcodeTable[0x81] = {"ADD A, C", &Cpu::handler_ADD_r8_r8, 4};
+  opcodeTable[0x82] = {"ADD A, D", &Cpu::handler_ADD_r8_r8, 4};
+  opcodeTable[0x83] = {"ADD A, E", &Cpu::handler_ADD_r8_r8, 4};
+  opcodeTable[0x84] = {"ADD A, H", &Cpu::handler_ADD_r8_r8, 4};
+  opcodeTable[0x85] = {"ADD A, L", &Cpu::handler_ADD_r8_r8, 4};
+  opcodeTable[0x86] = {"ADD A, (HL)", &Cpu::handler_ADD_r8_r8, 8};
+  opcodeTable[0x87] = {"ADD A, A", &Cpu::handler_ADD_r8_r8, 4};
+  opcodeTable[0x88] = {"ADC A, B", &Cpu::handler_ADC_r8_r8, 4};
+  opcodeTable[0x89] = {"ADC A, C", &Cpu::handler_ADC_r8_r8, 4};
+  opcodeTable[0x8A] = {"ADC A, D", &Cpu::handler_ADC_r8_r8, 4};
+  opcodeTable[0x8B] = {"ADC A, E", &Cpu::handler_ADC_r8_r8, 4};
+  opcodeTable[0x8C] = {"ADC A, H", &Cpu::handler_ADC_r8_r8, 4};
+  opcodeTable[0x8D] = {"ADC A, L", &Cpu::handler_ADC_r8_r8, 4};
+  opcodeTable[0x8E] = {"ADC A, (HL)", &Cpu::handler_ADC_r8_r8, 8};
+  opcodeTable[0x8F] = {"ADC A, A", &Cpu::handler_ADC_r8_r8, 4};
+
+  opcodeTable[0x90] = {"SUB B", &Cpu::handler_SUB_r8, 4};
+  opcodeTable[0x91] = {"SUB C", &Cpu::handler_SUB_r8, 4};
+  opcodeTable[0x92] = {"SUB D", &Cpu::handler_SUB_r8, 4};
+  opcodeTable[0x93] = {"SUB E", &Cpu::handler_SUB_r8, 4};
+  opcodeTable[0x94] = {"SUB H", &Cpu::handler_SUB_r8, 4};
+  opcodeTable[0x95] = {"SUB L", &Cpu::handler_SUB_r8, 4};
+  opcodeTable[0x96] = {"SUB (HL)", &Cpu::handler_SUB_r8, 8};
+  opcodeTable[0x97] = {"SUB A", &Cpu::handler_SUB_r8, 4};
+  opcodeTable[0x98] = {"SBC A, B", &Cpu::handler_SBC_r8_r8, 4};
+  opcodeTable[0x99] = {"SBC A, C", &Cpu::handler_SBC_r8_r8, 4};
+  opcodeTable[0x9A] = {"SBC A, D", &Cpu::handler_SBC_r8_r8, 4};
+  opcodeTable[0x9B] = {"SBC A, E", &Cpu::handler_SBC_r8_r8, 4};
+  opcodeTable[0x9C] = {"SBC A, H", &Cpu::handler_SBC_r8_r8, 4};
+  opcodeTable[0x9D] = {"SBC A, L", &Cpu::handler_SBC_r8_r8, 4};
+  opcodeTable[0x9E] = {"SBC A, (HL)", &Cpu::handler_SBC_r8_r8, 8};
+  opcodeTable[0x9F] = {"SBC A, A", &Cpu::handler_SBC_r8_r8, 4};
+
+  opcodeTable[0xA0] = {"AND B", &Cpu::handler_AND_r8, 4};
+  opcodeTable[0xA1] = {"AND C", &Cpu::handler_AND_r8, 4};
+  opcodeTable[0xA2] = {"AND D", &Cpu::handler_AND_r8, 4};
+  opcodeTable[0xA3] = {"AND E", &Cpu::handler_AND_r8, 4};
+  opcodeTable[0xA4] = {"AND H", &Cpu::handler_AND_r8, 4};
+  opcodeTable[0xA5] = {"AND L", &Cpu::handler_AND_r8, 4};
+  opcodeTable[0xA6] = {"AND (HL)", &Cpu::handler_AND_r8, 8};
+  opcodeTable[0xA7] = {"AND A", &Cpu::handler_AND_r8, 4};
+  opcodeTable[0xA8] = {"XOR B", &Cpu::handler_XOR_r8, 4};
+  opcodeTable[0xA9] = {"XOR C", &Cpu::handler_XOR_r8, 4};
+  opcodeTable[0xAA] = {"XOR D", &Cpu::handler_XOR_r8, 4};
+  opcodeTable[0xAB] = {"XOR E", &Cpu::handler_XOR_r8, 4};
+  opcodeTable[0xAC] = {"XOR H", &Cpu::handler_XOR_r8, 4};
+  opcodeTable[0xAD] = {"XOR L", &Cpu::handler_XOR_r8, 4};
+  opcodeTable[0xAE] = {"XOR (HL)", &Cpu::handler_XOR_r8, 8};
+  opcodeTable[0xAF] = {"XOR A", &Cpu::handler_XOR_r8, 4};
+
+  opcodeTable[0xB0] = {"OR B", &Cpu::handler_OR_r8, 4};
+  opcodeTable[0xB1] = {"OR C", &Cpu::handler_OR_r8, 4};
+  opcodeTable[0xB2] = {"OR D", &Cpu::handler_OR_r8, 4};
+  opcodeTable[0xB3] = {"OR E", &Cpu::handler_OR_r8, 4};
+  opcodeTable[0xB4] = {"OR H", &Cpu::handler_OR_r8, 4};
+  opcodeTable[0xB5] = {"OR L", &Cpu::handler_OR_r8, 4};
+  opcodeTable[0xB6] = {"OR (HL)", &Cpu::handler_OR_r8, 8};
+  opcodeTable[0xB7] = {"OR A", &Cpu::handler_OR_r8, 4};
+  opcodeTable[0xB8] = {"CP B", &Cpu::handler_CP_r8, 4};
+  opcodeTable[0xB9] = {"CP C", &Cpu::handler_CP_r8, 4};
+  opcodeTable[0xBA] = {"CP D", &Cpu::handler_CP_r8, 4};
+  opcodeTable[0xBB] = {"CP E", &Cpu::handler_CP_r8, 4};
+  opcodeTable[0xBC] = {"CP H", &Cpu::handler_CP_r8, 4};
+  opcodeTable[0xBD] = {"CP L", &Cpu::handler_CP_r8, 4};
+  opcodeTable[0xBE] = {"CP (HL)", &Cpu::handler_CP_r8, 8};
+  opcodeTable[0xBF] = {"CP A", &Cpu::handler_CP_r8, 4};
 }
 
 /*
@@ -328,7 +396,82 @@ void Cpu::handler_ADD_HL_r16(uint8_t opcode) {
   uint16_t *src = decode_reg16(opcode);
   addReg16(HL.val, *src);
 }
+void Cpu::handler_ADD_r8_r8(uint8_t opcode) {
+  uint8_t *src = decode_reg8(opcode, 's');
+  uint8_t *dst = decode_reg8(opcode, 'd');
+  uint16_t sum = *src + *dst;
+  uint8_t result = sum & 0x00FF;
+  writeFlag(Flag::Z, result == 0);
+  writeFlag(Flag::N, 0);
+  addSetH(*src, *dst);
+  writeFlag(Flag::C, sum > 0x00FF);
+  *dst = result;
+}
+void Cpu::handler_ADC_r8_r8(uint8_t opcode) {
+  uint8_t *src = decode_reg8(opcode, 's');
+  uint8_t *dst = decode_reg8(opcode, 'd');
+  uint8_t carry = readFlag(Flag::C) ? 1 : 0;
+  bool halfCarry = ((*dst & 0x0F) + (*src & 0x0F) + carry) > 0x0F;
+  uint16_t sum = *src + *dst + carry;
+  uint8_t result = sum & 0x00FF;
+  writeFlag(Flag::Z, result == 0);
+  writeFlag(Flag::N, 0);
+  writeFlag(Flag::H, halfCarry);
+  writeFlag(Flag::C, sum > 0x00FF);
+  *dst = result;
+}
 
+void Cpu::handler_SUB_r8(uint8_t opcode) {
+  uint8_t *src = decode_reg8(opcode, 's');
+  uint8_t diff = AF.hi - *src;
+  writeFlag(Flag::Z, diff == 0);
+  writeFlag(Flag::N, 1);
+  subSetH(AF.hi, *src);
+  writeFlag(Flag::C, AF.hi < *src);
+  AF.hi = diff;
+}
+
+void Cpu::handler_SBC_r8_r8(uint8_t opcode) {
+  uint8_t *src = decode_reg8(opcode, 's');
+  uint8_t *dst = decode_reg8(opcode, 'd');
+  uint8_t carry = readFlag(Flag::C) == true ? 1 : 0;
+  uint8_t diff = *dst - *src - carry;
+  writeFlag(Flag::Z, diff == 0);
+  writeFlag(Flag::N, 1);
+  writeFlag(Flag::H, (*dst & 0x0F) < ((*src & 0x0F) + carry));
+  writeFlag(Flag::C, *dst < (*src + carry));
+  *dst = diff;
+}
+
+void Cpu::handler_AND_r8(uint8_t opcode) {
+  AF.hi &= *(decode_reg8(opcode));
+  writeFlag(Flag::Z, AF.hi == 0);
+  writeFlag(Flag::N, 0);
+  writeFlag(Flag::H, 1);
+  writeFlag(Flag::C, 0);
+}
+void Cpu::handler_XOR_r8(uint8_t opcode) {
+  AF.hi ^= *(decode_reg8(opcode));
+  writeFlag(Flag::Z, AF.hi == 0);
+  writeFlag(Flag::N, 0);
+  writeFlag(Flag::H, 0);
+  writeFlag(Flag::C, 0);
+}
+void Cpu::handler_OR_r8(uint8_t opcode) {
+  AF.hi |= *(decode_reg8(opcode));
+  writeFlag(Flag::Z, AF.hi == 0);
+  writeFlag(Flag::N, 0);
+  writeFlag(Flag::H, 0);
+  writeFlag(Flag::C, 0);
+}
+void Cpu::handler_CP_r8(uint8_t opcode) {
+  uint8_t *src = decode_reg8(opcode, 's');
+  uint8_t diff = AF.hi - *src;
+  writeFlag(Flag::Z, diff == 0);
+  writeFlag(Flag::N, 1);
+  subSetH(AF.hi, *src);
+  writeFlag(Flag::C, AF.hi < *src);
+}
 /*
  * Jump s8
  * Moves the PC by a signed offset if a jump occurs. Flags determine this

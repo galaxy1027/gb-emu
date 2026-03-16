@@ -85,6 +85,14 @@ private:
   void handler_INC_DEC_r8(uint8_t opcode);
   void handler_INC_DEC_r16(uint8_t opcode);
   void handler_ADD_HL_r16(uint8_t opcode);
+  void handler_ADD_r8_r8(uint8_t opcode);
+  void handler_ADC_r8_r8(uint8_t opcode);
+  void handler_SUB_r8(uint8_t opcode);
+  void handler_SBC_r8_r8(uint8_t opcode);
+  void handler_AND_r8(uint8_t opcode);
+  void handler_XOR_r8(uint8_t opcode);
+  void handler_OR_r8(uint8_t opcode);
+  void handler_CP_r8(uint8_t opcode);
   void handler_JR_s8(uint8_t opcode);
   void handler_RRC_r8(uint8_t opcode);
   void handler_RLC_r8(uint8_t opcode);
