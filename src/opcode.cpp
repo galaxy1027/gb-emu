@@ -207,6 +207,74 @@ void Cpu::initOpcodeTable() {
   opcodeTable[0xBD] = {"CP L", &Cpu::handler_CP_r8, 4};
   opcodeTable[0xBE] = {"CP (HL)", &Cpu::handler_CP_r8, 8};
   opcodeTable[0xBF] = {"CP A", &Cpu::handler_CP_r8, 4};
+
+  opcodeTable[0xC0] = {"RET NZ", &Cpu::handler_RET, 8};
+  opcodeTable[0xC1] = {"POP BC", &Cpu::handler_POP, 12};
+  opcodeTable[0xC2] = {"JP NZ, a16", nullptr, 0};
+  opcodeTable[0xC3] = {"JP a16", nullptr, 16};
+  opcodeTable[0xC4] = {"CALL NZ, a16", nullptr, 0};
+  opcodeTable[0xC5] = {"PUSH BC", &Cpu::handler_PUSH, 16};
+  opcodeTable[0xC6] = {"ADD A, d8", nullptr, 8};
+  opcodeTable[0xC7] = {"RST 0", nullptr, 16};
+  opcodeTable[0xC8] = {"RET Z", &Cpu::handler_RET, 8};
+  opcodeTable[0xC9] = {"RET", &Cpu::handler_RET, 8};
+  opcodeTable[0xCA] = {"JP Z, a16", nullptr, 0};
+  opcodeTable[0xCB] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xCC] = {"CALL Z, a16", nullptr, 0};
+  opcodeTable[0xCD] = {"CALL a16", nullptr, 24};
+  opcodeTable[0xCE] = {"ADC A, d8", nullptr, 8};
+  opcodeTable[0xCF] = {"RST 1", nullptr, 16};
+
+  opcodeTable[0xD0] = {"RET NC", &Cpu::handler_RET, 8};
+  opcodeTable[0xD1] = {"POP DE", &Cpu::handler_POP, 12};
+  opcodeTable[0xD2] = {"JP NC, a16", nullptr, 0};
+  opcodeTable[0xD3] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xD4] = {"CALL NC, a16", nullptr, 0};
+  opcodeTable[0xD5] = {"PUSH DE", &Cpu::handler_PUSH, 16};
+  opcodeTable[0xD6] = {"SUB d8", nullptr, 8};
+  opcodeTable[0xD7] = {"RST 2", nullptr, 16};
+  opcodeTable[0xD8] = {"RET C", &Cpu::handler_RET, 8};
+  opcodeTable[0xD9] = {"RETI", nullptr, 16};
+  opcodeTable[0xDA] = {"JP C, a16", nullptr, 0};
+  opcodeTable[0xDB] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xDC] = {"CALL C, a16", nullptr, 0};
+  opcodeTable[0xDD] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xDE] = {"SBC A, d8", nullptr, 8};
+  opcodeTable[0xDF] = {"RST 3", nullptr, 16};
+
+  opcodeTable[0xE0] = {"LD (a8), A", nullptr, 12};
+  opcodeTable[0xE1] = {"POP HL", &Cpu::handler_POP, 12};
+  opcodeTable[0xE2] = {"LD (C), A", nullptr, 8};
+  opcodeTable[0xE3] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xE4] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xE5] = {"PUSH HL", &Cpu::handler_PUSH, 16};
+  opcodeTable[0xE6] = {"AND d8", nullptr, 8};
+  opcodeTable[0xE7] = {"RST 4", nullptr, 16};
+  opcodeTable[0xE8] = {"ADD SP, s8", nullptr, 16};
+  opcodeTable[0xE9] = {"JP HL", nullptr, 4};
+  opcodeTable[0xEA] = {"LD (a16), A", nullptr, 16};
+  opcodeTable[0xEB] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xEC] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xED] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xEE] = {"XOR d8", nullptr, 8};
+  opcodeTable[0xEF] = {"RST 5", nullptr, 16};
+
+  opcodeTable[0xF0] = {"LD A, (a8)", nullptr, 12};
+  opcodeTable[0xF1] = {"POP AF", &Cpu::handler_POP, 12};
+  opcodeTable[0xF2] = {"LD A, (C)", nullptr, 8};
+  opcodeTable[0xF3] = {"DI", &Cpu::handler_DI_EI, 4};
+  opcodeTable[0xF4] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xF5] = {"PUSH AF", &Cpu::handler_PUSH, 16};
+  opcodeTable[0xF6] = {"OR d8", nullptr, 8};
+  opcodeTable[0xF7] = {"RST 6", nullptr, 16};
+  opcodeTable[0xF8] = {"LD HL, SP+s8", nullptr, 12};
+  opcodeTable[0xF9] = {"LD SP, HL", nullptr, 8};
+  opcodeTable[0xFA] = {"LD A, (a16)", nullptr, 16};
+  opcodeTable[0xFB] = {"EI", &Cpu::handler_DI_EI, 4};
+  opcodeTable[0xFC] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xFD] = {"UNDEFINED", nullptr, 0};
+  opcodeTable[0xFE] = {"CP d8", nullptr, 8};
+  opcodeTable[0xFF] = {"RST 7", nullptr, 16};
 }
 
 /*
@@ -289,6 +357,26 @@ uint16_t *Cpu::decode_reg16(uint8_t opcode) {
     break;
   case 0x3:
     reg = &SP.val;
+    break;
+  }
+  return reg;
+}
+
+uint16_t *Cpu::decode_reg16_stack_ops(uint8_t opcode) {
+  uint16_t *reg = nullptr;
+
+  switch ((opcode >> 4) & 0x0F) {
+  case 0xC:
+    reg = &BC.val;
+    break;
+  case 0xD:
+    reg = &DE.val;
+    break;
+  case 0xE:
+    reg = &HL.val;
+    break;
+  case 0xF:
+    reg = &AF.val;
     break;
   }
   return reg;
@@ -587,6 +675,63 @@ void Cpu::handler_XCF(uint8_t opcode) {
   writeFlag(Flag::N, 0);
   writeFlag(Flag::H, 0);
 }
+
+void Cpu::handler_RET(uint8_t opcode) {
+  bool ret = false;
+  uint8_t t_states_added = 0;
+  switch (opcode) {
+  case 0xC0: // RET NZ
+    ret = !readFlag(Flag::Z);
+    t_states_added = 12;
+    break;
+  case 0xC8: // RET Z
+    ret = readFlag(Flag::Z);
+    t_states_added = 12;
+    break;
+  case 0xC9: // RET
+    ret = true;
+    t_states_added = 8;
+    break;
+  case 0xD0: // RET NC
+    ret = !readFlag(Flag::C);
+    t_states_added = 12;
+    break;
+  case 0xD8: // RET C
+    ret = readFlag(Flag::C);
+    t_states_added = 12;
+    break;
+  }
+  if (ret) {
+    PC.val = pop16();
+    t_states += t_states_added;
+  }
+}
+
+void Cpu::handler_PUSH(uint8_t opcode) {
+  uint16_t *src = decode_reg16_stack_ops(opcode);
+  if (src == &AF.val)
+    push16(*src & 0xFFF0);
+  else
+    push16(*src);
+}
+
+void Cpu::handler_POP(uint8_t opcode) {
+  uint16_t *dst = decode_reg16_stack_ops(opcode);
+  *dst = pop16();
+  if (dst == &AF.val)
+    *dst &= 0xFFF0;
+}
+
+/*
+ * Disable or enable interupt master enable (IME) flag
+ */
+void Cpu::handler_DI_EI(uint8_t opcode) {
+  if (opcode == 0xF3)
+    IME = 0;
+  else
+    IME_Pending = true;
+}
+
 /*
  * STOP opcode handler
  * Stops the internal system clock and oscillator. Has one byte of padding,

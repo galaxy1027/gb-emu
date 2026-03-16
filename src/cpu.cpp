@@ -59,6 +59,12 @@ void Cpu::cycle() {
   if (t_states == 0 && !stopped) {
     uint8_t opcode = fetch();
     execute(opcode);
+
+    if (IME_Pending) {
+      IME = IME_Pending;
+      IME_Pending = false;
+    }
+
   } else {
     t_states--;
   }
@@ -196,4 +202,25 @@ void Cpu::rotateRight(uint8_t &reg) {
   bool oldCarry = readFlag(Flag::C);
   writeFlag(Flag::C, (reg & 0x01));
   reg = (reg >> 1) | (static_cast<uint8_t>(oldCarry) << 7);
+}
+
+uint8_t Cpu::pop() {
+  uint8_t popped = readByteMemory(SP.val);
+  SP.val++;
+  return popped;
+}
+uint16_t Cpu::pop16() {
+  uint16_t popped = readByteMemory(SP.val);
+  SP.val++;
+  popped |= readByteMemory(SP.val) << 8;
+  SP.val++;
+  return popped;
+}
+void Cpu::push(uint8_t val) {
+  SP.val--;
+  writeByteMemory(val, SP.val);
+}
+void Cpu::push16(uint16_t val) {
+  push((val >> 8) & 0x00FF);
+  push(val & 0x00FF);
 }

@@ -37,7 +37,7 @@ struct Reg16 {
 class Cpu {
 private:
   Reg16 AF, BC, DE, HL, SP, PC;
-  bool IME, stopped;
+  bool IME, IME_Pending, stopped;
   int t_states;
   std::array<opcode, 256> opcodeTable;
   std::array<uint8_t, 65536> memory;
@@ -69,10 +69,15 @@ private:
   void rotateRightThroughCarry(uint8_t &reg);
   void rotateLeft(uint8_t &reg);
   void rotateRight(uint8_t &reg);
+  uint8_t pop();
+  uint16_t pop16();
+  void push(uint8_t val);
+  void push16(uint16_t val);
 
   uint8_t *decode_reg8(uint8_t opcode, char type);
   uint8_t *decode_reg8(uint8_t opcode);
   uint16_t *decode_reg16(uint8_t opcode);
+  uint16_t *decode_reg16_stack_ops(uint8_t opcode);
   /* Opcode handlers */
 
   void handler_NOP(uint8_t opcode);
@@ -101,6 +106,10 @@ private:
   void handler_DAA(uint8_t opcode);
   void handler_CPL(uint8_t opcode);
   void handler_XCF(uint8_t opcode);
+  void handler_RET(uint8_t opcode);
+  void handler_PUSH(uint8_t opcode);
+  void handler_POP(uint8_t opcode);
+  void handler_DI_EI(uint8_t opcode);
   void handler_STOP(uint8_t opcode);
 
   void initOpcodeTable();
