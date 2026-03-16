@@ -25,20 +25,19 @@ enum class Flag : int { Z = 7, N = 6, H = 5, C = 4 };
  * H    L
  */
 struct Reg16 {
-  uint8_t lo;
-  uint8_t hi;
-  uint16_t getVal() { return hi << 8 | lo; }
-
-  void loadReg(uint16_t val) {
-    lo = val & 0x00FF;
-    hi = (val & 0xFF00) >> 8;
-  }
+  union {
+    struct {
+      uint8_t lo;
+      uint8_t hi;
+    };
+    uint16_t val;
+  };
 };
 
 class Cpu {
 private:
   Reg16 AF, BC, DE, HL, SP, PC;
-  bool IME;
+  bool IME, stopped;
   int t_states;
   std::array<opcode, 256> opcodeTable;
   std::array<uint8_t, 65536> memory;
@@ -62,56 +61,41 @@ private:
   void decReg(uint8_t &reg);
   void incReg16(Reg16 &reg);
   void decReg16(Reg16 &reg);
-  void addReg16(Reg16 &source, Reg16 &dest);
+  void addReg16(uint16_t &source, uint16_t &dest);
   void addSetH(uint8_t a, uint8_t b);
+  void add16SetH(uint16_t a, uint16_t b);
   void subSetH(uint8_t a, uint8_t b);
   void rotateLeftThroughCarry(uint8_t &reg);
   void rotateRightThroughCarry(uint8_t &reg);
   void rotateLeft(uint8_t &reg);
   void rotateRight(uint8_t &reg);
 
+  uint8_t *decode_reg8(uint8_t opcode, char type);
+  uint8_t *decode_reg8(uint8_t opcode);
+  uint16_t *decode_reg16(uint8_t opcode);
   /* Opcode handlers */
 
   void handler_NOP(uint8_t opcode);
+  void handler_LD_r8_d8(uint8_t opcode);
   void handler_LD_r16_d16(uint8_t opcode);
-  void handler_INC_r8(uint8_t opcode);
-  void handler_DEC_r8(uint8_t opcode);
+  void handler_LD_r8_r8(uint8_t opcode);
+  void handler_LD_mem_A(uint8_t opcode);
+  void handler_LD_A_mem(uint8_t opcode);
+  void handler_LD_mem_SP(uint8_t opcode);
+  void handler_INC_DEC_r8(uint8_t opcode);
   void handler_INC_DEC_r16(uint8_t opcode);
+  void handler_ADD_HL_r16(uint8_t opcode);
+  void handler_JR_s8(uint8_t opcode);
+  void handler_RRC_r8(uint8_t opcode);
+  void handler_RLC_r8(uint8_t opcode);
+  void handler_RR_r8(uint8_t opcode);
+  void handler_RL_r8(uint8_t opcode);
+  void handler_DAA(uint8_t opcode);
+  void handler_CPL(uint8_t opcode);
+  void handler_XCF(uint8_t opcode);
+  void handler_STOP(uint8_t opcode);
 
   void initOpcodeTable();
-  void op_0x00();
-  void op_0x01();
-  void op_0x02();
-  void op_0x03();
-  void op_0x04();
-  void op_0x05();
-  void op_0x06();
-  void op_0x07();
-  void op_0x08();
-  void op_0x09();
-  void op_0x0A();
-  void op_0x0B();
-  void op_0x0C();
-  void op_0x0D();
-  void op_0x0E();
-  void op_0x0F();
-
-  void op_0x10();
-  void op_0x11();
-  void op_0x12();
-  void op_0x13();
-  void op_0x14();
-  void op_0x15();
-  void op_0x16();
-  void op_0x17();
-  void op_0x18();
-  void op_0x19();
-  void op_0x1A();
-  void op_0x1B();
-  void op_0x1C();
-  void op_0x1D();
-  void op_0x1E();
-  void op_0x1F();
 
 public:
   Cpu();

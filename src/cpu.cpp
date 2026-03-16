@@ -7,15 +7,15 @@
 
 Cpu::Cpu() {
   memory.fill(0);
-  PC.loadReg(0x1000);
+  PC.val = 0x1000;
   initOpcodeTable();
-  AF.loadReg(0x01B0);
-  BC.loadReg(0x0013);
-  DE.loadReg(0x00D8);
-  HL.loadReg(0x014D);
+  AF.val = (0x01B0);
+  BC.val = (0x0013);
+  DE.val = (0x00D8);
+  HL.val = (0x014D);
 
-  SP.loadReg(0xFFFE);
-  PC.loadReg(0x0100);
+  SP.val = (0xFFFE);
+  PC.val = (0x0100);
 }
 
 int Cpu::loadRom(const std::string &path) {
@@ -37,7 +37,7 @@ int Cpu::loadRom(const std::string &path) {
   return loaded;
 }
 
-uint8_t Cpu::fetch() { return memory[PC++]; }
+uint8_t Cpu::fetch() { return memory[PC.val++]; }
 
 uint16_t Cpu::fetch16() {
   uint8_t lo = fetch();
@@ -56,11 +56,12 @@ void Cpu::execute(uint8_t opcode_fetched) {
 }
 
 void Cpu::cycle() {
-  if (t_states == 0) {
+  if (t_states == 0 && !stopped) {
     uint8_t opcode = fetch();
     execute(opcode);
+  } else {
+    t_states--;
   }
-  t_states--;
 }
 
 /***********************************************************
@@ -105,7 +106,7 @@ void Cpu::writeFlag(Flag F, bool value) {
   AF.lo &= 0xF0;
 }
 void Cpu::load8(uint16_t addr, uint8_t &dest) { dest = read8(addr); }
-void Cpu::loadReg(uint16_t addr, Reg16 &dest) { dest.loadReg(read8(addr)); }
+void Cpu::loadReg(uint16_t addr, Reg16 &dest) { dest.val = read8(addr); }
 
 /*
  * Increment / Decrement register
@@ -127,16 +128,15 @@ void Cpu::decReg(uint8_t &reg) {
   subSetH(oldVal, 1);
 }
 
-void Cpu::incReg16(Reg16 &reg) { reg.loadReg(reg.getVal() + 1); }
-void Cpu::decReg16(Reg16 &reg) { reg.loadReg(reg.getVal() - 1); }
+void Cpu::incReg16(Reg16 &reg) { reg.val++; }
+void Cpu::decReg16(Reg16 &reg) { reg.val--; }
 
-void Cpu::addReg16(Reg16 &source, Reg16 &dest) {
-  uint16_t srcVal = source.getVal(), dstVal = dest.getVal(),
-           sum = srcVal + dstVal;
-  addSetH(srcVal, dstVal);
+void Cpu::addReg16(uint16_t &dest, uint16_t &source) {
+  uint32_t sum = source + dest;
+  add16SetH(source, dest);
   writeFlag(Flag::N, 0);
-  writeFlag(Flag::C, (sum < srcVal));
-  dest.loadReg(sum);
+  writeFlag(Flag::C, (sum > 0xFFFF));
+  dest = sum & 0x0000FFFF;
 }
 
 /*
@@ -146,6 +146,11 @@ void Cpu::addReg16(Reg16 &source, Reg16 &dest) {
  */
 void Cpu::addSetH(uint8_t a, uint8_t b) {
   bool halfCarry = (a & 0x0F) + (b & 0x0F) > 0x0F;
+  writeFlag(Flag::H, halfCarry);
+}
+
+void Cpu::add16SetH(uint16_t a, uint16_t b) {
+  bool halfCarry = (a & 0x0FFF) + (b & 0x0FFF) > 0x0FFF;
   writeFlag(Flag::H, halfCarry);
 }
 
