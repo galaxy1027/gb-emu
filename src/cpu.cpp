@@ -32,8 +32,8 @@ int Cpu::loadRom(const std::string &path) {
     for (size_t i = 0; i < rom.size() && i < 0x8000; i++) {
       memory[i] = rom[i];
     }
+    std::cout << "Rom Loaded\n";
   }
-  std::cout << "Rom Loaded\n";
   return loaded;
 }
 
@@ -79,6 +79,8 @@ void Cpu::writeByteMemory(uint8_t data, uint16_t address) {
 }
 uint8_t Cpu::readByteMemory(uint16_t addr) { return memory[addr]; }
 
+uint8_t *Cpu::getMemoryPtr(uint16_t addr) { return &memory[addr]; }
+
 void Cpu::store8(uint8_t data, uint16_t address) {
   writeByteMemory(data, address);
 }
@@ -112,27 +114,7 @@ void Cpu::writeFlag(Flag F, bool value) {
   AF.lo &= 0xF0;
 }
 void Cpu::load8(uint16_t addr, uint8_t &dest) { dest = read8(addr); }
-void Cpu::loadReg(uint16_t addr, Reg16 &dest) { dest.val = read8(addr); }
-
-/*
- * Increment / Decrement register
- * Generic helper to increment or decrement a register and set flags accordingly
- */
-void Cpu::incReg(uint8_t &reg) {
-  uint8_t oldVal = reg;
-  reg += 1;
-  writeFlag(Flag::Z, reg == 0);
-  writeFlag(Flag::N, 0);
-  addSetH(oldVal, 1);
-}
-
-void Cpu::decReg(uint8_t &reg) {
-  uint8_t oldVal = reg;
-  reg -= 1;
-  writeFlag(Flag::Z, reg == 0);
-  writeFlag(Flag::N, 1);
-  subSetH(oldVal, 1);
-}
+void Cpu::loadReg16(uint16_t addr, Reg16 &dest) { dest.val = read16(addr); }
 
 void Cpu::incReg16(Reg16 &reg) { reg.val++; }
 void Cpu::decReg16(Reg16 &reg) { reg.val--; }
@@ -166,12 +148,12 @@ void Cpu::subSetH(uint8_t a, uint8_t b) {
 }
 
 /*
- * RCLX
+ * RLCX
  * Takes a register and shifts it left.
  * The 7th bit is shifted out and rotated to bit 0.
  * It is also saved to flag C.
  */
-void Cpu::rotateLeftThroughCarry(uint8_t &reg) {
+void Cpu::rotateLeftCarry(uint8_t &reg) {
   uint8_t oldBit7 = reg & 0x80;
   reg = (reg << 1) | (oldBit7 >> 7);
   writeFlag(Flag::Z, 0);
@@ -184,7 +166,7 @@ void Cpu::rotateLeftThroughCarry(uint8_t &reg) {
  * RRCX
  * Works the same as RCLX, but shifts right
  */
-void Cpu::rotateRightThroughCarry(uint8_t &reg) {
+void Cpu::rotateRightCarry(uint8_t &reg) {
   uint8_t oldBit0 = reg & 0x01;
   reg = (reg >> 1) | (oldBit0 << 7);
   writeFlag(Flag::Z, 0);

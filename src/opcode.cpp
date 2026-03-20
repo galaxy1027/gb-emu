@@ -55,7 +55,7 @@ void Cpu::initOpcodeTable() {
   opcodeTable[0x2E] = {"LD L, d8", &Cpu::handler_LD_r8_d8, 8};
   opcodeTable[0x2F] = {"CPL", &Cpu::handler_CPL, 4};
 
-  opcodeTable[0x30] = {"JR NZ, s8", &Cpu::handler_JR_s8, 8};
+  opcodeTable[0x30] = {"JR NC, s8", &Cpu::handler_JR_s8, 8};
   opcodeTable[0x31] = {"LD SP, d16", &Cpu::handler_LD_r16_d16, 12};
   opcodeTable[0x32] = {"LD (HL-), A", &Cpu::handler_LD_mem_A, 8};
   opcodeTable[0x33] = {"INC SP", &Cpu::handler_INC_DEC_r16, 8};
@@ -210,37 +210,37 @@ void Cpu::initOpcodeTable() {
 
   opcodeTable[0xC0] = {"RET NZ", &Cpu::handler_RET, 8};
   opcodeTable[0xC1] = {"POP BC", &Cpu::handler_POP, 12};
-  opcodeTable[0xC2] = {"JP NZ, a16", nullptr, 0};
-  opcodeTable[0xC3] = {"JP a16", nullptr, 16};
-  opcodeTable[0xC4] = {"CALL NZ, a16", nullptr, 0};
+  opcodeTable[0xC2] = {"JP NZ, a16", &Cpu::handler_JP_a16, 12};
+  opcodeTable[0xC3] = {"JP a16", &Cpu::handler_JP_a16, 12};
+  opcodeTable[0xC4] = {"CALL NZ, a16", &Cpu::handler_CALL_a16, 12};
   opcodeTable[0xC5] = {"PUSH BC", &Cpu::handler_PUSH, 16};
-  opcodeTable[0xC6] = {"ADD A, d8", nullptr, 8};
-  opcodeTable[0xC7] = {"RST 0", nullptr, 16};
+  opcodeTable[0xC6] = {"ADD A, d8", &Cpu::handler_ADD_r8_d8, 8};
+  opcodeTable[0xC7] = {"RST 0", &Cpu::handler_RST, 16};
   opcodeTable[0xC8] = {"RET Z", &Cpu::handler_RET, 8};
   opcodeTable[0xC9] = {"RET", &Cpu::handler_RET, 8};
-  opcodeTable[0xCA] = {"JP Z, a16", nullptr, 0};
+  opcodeTable[0xCA] = {"JP Z, a16", &Cpu::handler_JP_a16, 12};
   opcodeTable[0xCB] = {"UNDEFINED", nullptr, 0};
-  opcodeTable[0xCC] = {"CALL Z, a16", nullptr, 0};
-  opcodeTable[0xCD] = {"CALL a16", nullptr, 24};
-  opcodeTable[0xCE] = {"ADC A, d8", nullptr, 8};
-  opcodeTable[0xCF] = {"RST 1", nullptr, 16};
+  opcodeTable[0xCC] = {"CALL Z, a16", &Cpu::handler_CALL_a16, 12};
+  opcodeTable[0xCD] = {"CALL a16", &Cpu::handler_CALL_a16, 12};
+  opcodeTable[0xCE] = {"ADC A, d8", &Cpu::handler_ADC_r8_d8, 8};
+  opcodeTable[0xCF] = {"RST 1", &Cpu::handler_RST, 16};
 
   opcodeTable[0xD0] = {"RET NC", &Cpu::handler_RET, 8};
   opcodeTable[0xD1] = {"POP DE", &Cpu::handler_POP, 12};
-  opcodeTable[0xD2] = {"JP NC, a16", nullptr, 0};
+  opcodeTable[0xD2] = {"JP NC, a16", &Cpu::handler_JP_a16, 12};
   opcodeTable[0xD3] = {"UNDEFINED", nullptr, 0};
-  opcodeTable[0xD4] = {"CALL NC, a16", nullptr, 0};
+  opcodeTable[0xD4] = {"CALL NC, a16", &Cpu::handler_CALL_a16, 12};
   opcodeTable[0xD5] = {"PUSH DE", &Cpu::handler_PUSH, 16};
-  opcodeTable[0xD6] = {"SUB d8", nullptr, 8};
-  opcodeTable[0xD7] = {"RST 2", nullptr, 16};
+  opcodeTable[0xD6] = {"SUB d8", &Cpu::handler_SUB_d8, 8};
+  opcodeTable[0xD7] = {"RST 2", &Cpu::handler_RST, 16};
   opcodeTable[0xD8] = {"RET C", &Cpu::handler_RET, 8};
   opcodeTable[0xD9] = {"RETI", nullptr, 16};
-  opcodeTable[0xDA] = {"JP C, a16", nullptr, 0};
+  opcodeTable[0xDA] = {"JP C, a16", &Cpu::handler_JP_a16, 12};
   opcodeTable[0xDB] = {"UNDEFINED", nullptr, 0};
-  opcodeTable[0xDC] = {"CALL C, a16", nullptr, 0};
+  opcodeTable[0xDC] = {"CALL C, a16", &Cpu::handler_CALL_a16, 0};
   opcodeTable[0xDD] = {"UNDEFINED", nullptr, 0};
-  opcodeTable[0xDE] = {"SBC A, d8", nullptr, 8};
-  opcodeTable[0xDF] = {"RST 3", nullptr, 16};
+  opcodeTable[0xDE] = {"SBC A, d8", &Cpu::handler_SBC_r8_d8, 8};
+  opcodeTable[0xDF] = {"RST 3", &Cpu::handler_RST, 16};
 
   opcodeTable[0xE0] = {"LD (a8), A", nullptr, 12};
   opcodeTable[0xE1] = {"POP HL", &Cpu::handler_POP, 12};
@@ -248,16 +248,16 @@ void Cpu::initOpcodeTable() {
   opcodeTable[0xE3] = {"UNDEFINED", nullptr, 0};
   opcodeTable[0xE4] = {"UNDEFINED", nullptr, 0};
   opcodeTable[0xE5] = {"PUSH HL", &Cpu::handler_PUSH, 16};
-  opcodeTable[0xE6] = {"AND d8", nullptr, 8};
-  opcodeTable[0xE7] = {"RST 4", nullptr, 16};
+  opcodeTable[0xE6] = {"AND d8", &Cpu::handler_AND_d8, 8};
+  opcodeTable[0xE7] = {"RST 4", &Cpu::handler_RST, 16};
   opcodeTable[0xE8] = {"ADD SP, s8", nullptr, 16};
-  opcodeTable[0xE9] = {"JP HL", nullptr, 4};
+  opcodeTable[0xE9] = {"JP HL", &Cpu::handler_JP_HL, 4};
   opcodeTable[0xEA] = {"LD (a16), A", nullptr, 16};
   opcodeTable[0xEB] = {"UNDEFINED", nullptr, 0};
   opcodeTable[0xEC] = {"UNDEFINED", nullptr, 0};
   opcodeTable[0xED] = {"UNDEFINED", nullptr, 0};
-  opcodeTable[0xEE] = {"XOR d8", nullptr, 8};
-  opcodeTable[0xEF] = {"RST 5", nullptr, 16};
+  opcodeTable[0xEE] = {"XOR d8", &Cpu::handler_XOR_d8, 8};
+  opcodeTable[0xEF] = {"RST 5", &Cpu::handler_RST, 16};
 
   opcodeTable[0xF0] = {"LD A, (a8)", nullptr, 12};
   opcodeTable[0xF1] = {"POP AF", &Cpu::handler_POP, 12};
@@ -265,16 +265,16 @@ void Cpu::initOpcodeTable() {
   opcodeTable[0xF3] = {"DI", &Cpu::handler_DI_EI, 4};
   opcodeTable[0xF4] = {"UNDEFINED", nullptr, 0};
   opcodeTable[0xF5] = {"PUSH AF", &Cpu::handler_PUSH, 16};
-  opcodeTable[0xF6] = {"OR d8", nullptr, 8};
-  opcodeTable[0xF7] = {"RST 6", nullptr, 16};
+  opcodeTable[0xF6] = {"OR d8", &Cpu::handler_OR_d8, 8};
+  opcodeTable[0xF7] = {"RST 6", &Cpu::handler_RST, 16};
   opcodeTable[0xF8] = {"LD HL, SP+s8", nullptr, 12};
   opcodeTable[0xF9] = {"LD SP, HL", nullptr, 8};
   opcodeTable[0xFA] = {"LD A, (a16)", nullptr, 16};
   opcodeTable[0xFB] = {"EI", &Cpu::handler_DI_EI, 4};
   opcodeTable[0xFC] = {"UNDEFINED", nullptr, 0};
   opcodeTable[0xFD] = {"UNDEFINED", nullptr, 0};
-  opcodeTable[0xFE] = {"CP d8", nullptr, 8};
-  opcodeTable[0xFF] = {"RST 7", nullptr, 16};
+  opcodeTable[0xFE] = {"CP d8", &Cpu::handler_CP_d8, 8};
+  opcodeTable[0xFF] = {"RST 7", &Cpu::handler_RST, 16};
 }
 
 /*
@@ -328,11 +328,51 @@ uint8_t *Cpu::decode_reg8(uint8_t opcode) {
   case 0x5:
     reg = &HL.lo;
     break;
+  case 0x6:
+    reg = nullptr;
+    break;
   case 0x7:
     reg = &AF.hi;
     break;
   }
   return reg;
+}
+
+uint8_t Cpu::readReg8(uint8_t opcode, char type) {
+  bool useHL;
+  uint8_t val;
+  if (type == 'd')
+    useHL = ((opcode >> 3) & 0b111) == 0x6;
+  else
+    useHL = (opcode & 0b111) == 0x6;
+
+  if (useHL)
+    val = readByteMemory(HL.val);
+  else
+    val = *(decode_reg8(opcode, type));
+  return val;
+}
+
+/*
+ * Version of write reg where source is assumed.
+ */
+void Cpu::writeReg8(uint8_t opcode, uint8_t val) {
+  bool useHL = ((opcode & 0b111)) == 0x6;
+
+  if (useHL)
+    writeByteMemory(HL.val, val);
+  else
+    *(decode_reg8(opcode)) = val;
+}
+
+void Cpu::writeReg8(uint8_t opcode, char type, uint8_t val) {
+  bool useHL =
+      ((type == 'd') ? ((opcode >> 3) & 0b111) : (opcode & 0b111)) == 0x6;
+
+  if (useHL)
+    writeByteMemory(HL.val, val);
+  else
+    *(decode_reg8(opcode, type)) = val;
 }
 /*
  * For 16 bit operations, aside from some stack operations, the format is
@@ -391,9 +431,8 @@ void Cpu::handler_NOP(uint8_t opcode) {} // NOP, do nothing
  * Decode a destination register and load fetched byte into it.
  */
 void Cpu::handler_LD_r8_d8(uint8_t opcode) {
-  uint8_t *dest = decode_reg8(opcode, 'd');
   uint8_t data = fetch();
-  *dest = data;
+  writeReg8(opcode, 'd', data);
 }
 /*
  * LD r16, d16
@@ -407,9 +446,8 @@ void Cpu::handler_LD_r16_d16(uint8_t opcode) {
 }
 
 void Cpu::handler_LD_r8_r8(uint8_t opcode) {
-  uint8_t *src = decode_reg8(opcode, 's');
-  uint8_t *dst = decode_reg8(opcode, 'd');
-  *dst = *src;
+  uint8_t src = readReg8(opcode, 's');
+  writeReg8(opcode, 'd', src);
 }
 
 void Cpu::handler_LD_mem_A(uint8_t opcode) {
@@ -430,7 +468,7 @@ void Cpu::handler_LD_mem_A(uint8_t opcode) {
     HL.val--;
     break;
   }
-  writeByteMemory(AF.hi, ptr);
+  writeByteMemory(ptr, AF.hi);
 }
 
 void Cpu::handler_LD_A_mem(uint8_t opcode) {
@@ -465,11 +503,11 @@ void Cpu::handler_LD_mem_SP(uint8_t opcode) {
  * Decode this and the destination register to change.
  */
 void Cpu::handler_INC_DEC_r8(uint8_t opcode) {
-  uint8_t *dest = decode_reg8(opcode, 'd');
-  uint8_t oldVal = *dest;
+  uint8_t oldVal = readReg8(opcode, 'd');
   bool increment = !(opcode & 0x01);
-  increment ? (*dest)++ : (*dest)--;
-  writeFlag(Flag::Z, *dest == 0);
+  uint8_t newVal = increment ? oldVal + 1 : oldVal - 1;
+  writeReg8(opcode, 'd', newVal);
+  writeFlag(Flag::Z, newVal == 0);
   writeFlag(Flag::N, !increment);
   increment ? addSetH(oldVal, 1) : subSetH(oldVal, 1);
 }
@@ -484,82 +522,171 @@ void Cpu::handler_ADD_HL_r16(uint8_t opcode) {
   uint16_t *src = decode_reg16(opcode);
   addReg16(HL.val, *src);
 }
+
+/*
+ * Arithmetic operations (register to register)
+ */
 void Cpu::handler_ADD_r8_r8(uint8_t opcode) {
-  uint8_t *src = decode_reg8(opcode, 's');
-  uint8_t *dst = decode_reg8(opcode, 'd');
-  uint16_t sum = *src + *dst;
+  uint8_t src = readReg8(opcode, 's');
+  uint16_t sum = AF.hi + src;
   uint8_t result = sum & 0x00FF;
   writeFlag(Flag::Z, result == 0);
   writeFlag(Flag::N, 0);
-  addSetH(*src, *dst);
+  addSetH(AF.hi, src);
   writeFlag(Flag::C, sum > 0x00FF);
-  *dst = result;
+  AF.hi = result;
 }
 void Cpu::handler_ADC_r8_r8(uint8_t opcode) {
-  uint8_t *src = decode_reg8(opcode, 's');
-  uint8_t *dst = decode_reg8(opcode, 'd');
+  uint8_t src = readReg8(opcode, 's');
   uint8_t carry = readFlag(Flag::C) ? 1 : 0;
-  bool halfCarry = ((*dst & 0x0F) + (*src & 0x0F) + carry) > 0x0F;
-  uint16_t sum = *src + *dst + carry;
+  bool halfCarry = ((AF.hi & 0x0F) + (src & 0x0F) + carry) > 0x0F;
+  uint16_t sum = src + AF.hi + carry;
   uint8_t result = sum & 0x00FF;
   writeFlag(Flag::Z, result == 0);
   writeFlag(Flag::N, 0);
   writeFlag(Flag::H, halfCarry);
   writeFlag(Flag::C, sum > 0x00FF);
-  *dst = result;
+  AF.hi = result;
 }
 
 void Cpu::handler_SUB_r8(uint8_t opcode) {
-  uint8_t *src = decode_reg8(opcode, 's');
-  uint8_t diff = AF.hi - *src;
+  uint8_t src = readReg8(opcode, 's');
+  uint8_t diff = AF.hi - src;
   writeFlag(Flag::Z, diff == 0);
   writeFlag(Flag::N, 1);
-  subSetH(AF.hi, *src);
-  writeFlag(Flag::C, AF.hi < *src);
+  subSetH(AF.hi, src);
+  writeFlag(Flag::C, AF.hi < src);
   AF.hi = diff;
 }
 
 void Cpu::handler_SBC_r8_r8(uint8_t opcode) {
-  uint8_t *src = decode_reg8(opcode, 's');
-  uint8_t *dst = decode_reg8(opcode, 'd');
+  uint8_t src = readReg8(opcode, 's');
   uint8_t carry = readFlag(Flag::C) == true ? 1 : 0;
-  uint8_t diff = *dst - *src - carry;
+  uint8_t diff = AF.hi - src - carry;
   writeFlag(Flag::Z, diff == 0);
   writeFlag(Flag::N, 1);
-  writeFlag(Flag::H, (*dst & 0x0F) < ((*src & 0x0F) + carry));
-  writeFlag(Flag::C, *dst < (*src + carry));
-  *dst = diff;
+  writeFlag(Flag::H, (AF.hi & 0x0F) < ((src & 0x0F) + carry));
+  writeFlag(Flag::C, AF.hi < (src + carry));
+  AF.hi = diff;
 }
 
 void Cpu::handler_AND_r8(uint8_t opcode) {
-  AF.hi &= *(decode_reg8(opcode));
+  AF.hi &= (readReg8(opcode, 's'));
   writeFlag(Flag::Z, AF.hi == 0);
   writeFlag(Flag::N, 0);
   writeFlag(Flag::H, 1);
   writeFlag(Flag::C, 0);
 }
 void Cpu::handler_XOR_r8(uint8_t opcode) {
-  AF.hi ^= *(decode_reg8(opcode));
+  AF.hi ^= readReg8(opcode, 's');
   writeFlag(Flag::Z, AF.hi == 0);
   writeFlag(Flag::N, 0);
   writeFlag(Flag::H, 0);
   writeFlag(Flag::C, 0);
 }
 void Cpu::handler_OR_r8(uint8_t opcode) {
-  AF.hi |= *(decode_reg8(opcode));
+  AF.hi |= readReg8(opcode, 's');
   writeFlag(Flag::Z, AF.hi == 0);
   writeFlag(Flag::N, 0);
   writeFlag(Flag::H, 0);
   writeFlag(Flag::C, 0);
 }
 void Cpu::handler_CP_r8(uint8_t opcode) {
-  uint8_t *src = decode_reg8(opcode, 's');
-  uint8_t diff = AF.hi - *src;
+  uint8_t src = readReg8(opcode, 's');
+  uint8_t diff = AF.hi - src;
   writeFlag(Flag::Z, diff == 0);
   writeFlag(Flag::N, 1);
-  subSetH(AF.hi, *src);
-  writeFlag(Flag::C, AF.hi < *src);
+  subSetH(AF.hi, src);
+  writeFlag(Flag::C, AF.hi < src);
 }
+
+/*
+ * Arithmetic operations (immediate)
+ */
+
+void Cpu::handler_ADD_r8_d8(uint8_t opcode) {
+  uint8_t val = fetch();
+  uint16_t sum = val + AF.hi;
+  uint8_t result = sum & 0x00FF;
+  writeFlag(Flag::Z, result == 0);
+  writeFlag(Flag::N, 0);
+  addSetH(AF.hi, val);
+  writeFlag(Flag::C, sum > 0x00FF);
+  AF.hi = result;
+}
+
+void Cpu::handler_ADC_r8_d8(uint8_t opcode) {
+  uint8_t val = fetch();
+  int carry = readFlag(Flag::C) ? 1 : 0;
+  uint16_t sum = val + AF.hi + carry;
+  uint8_t result = sum & 0x00FF;
+  writeFlag(Flag::Z, result == 0);
+  writeFlag(Flag::N, 0);
+  writeFlag(Flag::H, ((AF.hi & 0xF) + (val & 0xF) + carry) > 0xF);
+  writeFlag(Flag::C, sum > 0x00FF);
+  AF.hi = result;
+}
+
+void Cpu::handler_SUB_d8(uint8_t opcode) {
+  uint8_t val = fetch();
+  uint16_t diff = AF.hi - val;
+  writeFlag(Flag::Z, (diff & 0xFF) == 0);
+  writeFlag(Flag::N, 1);
+  subSetH(AF.hi, val);
+  writeFlag(Flag::C, AF.hi < val);
+  AF.hi = diff & 0x00FF;
+}
+
+void Cpu::handler_SBC_r8_d8(uint8_t opcode) {
+  uint8_t val = fetch();
+  int carry = readFlag(Flag::C) ? 1 : 0;
+  uint16_t diff = AF.hi - val - carry;
+  writeFlag(Flag::Z, (diff & 0xFF) == 0);
+  writeFlag(Flag::N, 1);
+  writeFlag(Flag::H, (AF.hi & 0xF) < ((val & 0xF) + carry));
+  writeFlag(Flag::C, AF.hi < (val + carry));
+  AF.hi = diff & 0x00FF;
+}
+
+void Cpu::handler_AND_d8(uint8_t opcode) {
+  uint8_t val = fetch();
+  uint8_t result = AF.hi & val;
+  writeFlag(Flag::Z, result == 0);
+  writeFlag(Flag::N, 0);
+  writeFlag(Flag::H, 1);
+  writeFlag(Flag::C, 0);
+  AF.hi = result & 0x00FF;
+}
+
+void Cpu::handler_XOR_d8(uint8_t opcode) {
+  uint8_t val = fetch();
+  uint8_t result = AF.hi ^ val;
+  writeFlag(Flag::Z, result == 0);
+  writeFlag(Flag::N, 0);
+  writeFlag(Flag::H, 0);
+  writeFlag(Flag::C, 0);
+  AF.hi = result & 0x00FF;
+}
+
+void Cpu::handler_OR_d8(uint8_t opcode) {
+  uint8_t val = fetch();
+  uint8_t result = AF.hi | val;
+  writeFlag(Flag::Z, result == 0);
+  writeFlag(Flag::N, 0);
+  writeFlag(Flag::H, 0);
+  writeFlag(Flag::C, 0);
+  AF.hi = result & 0x00FF;
+}
+
+void Cpu::handler_CP_d8(uint8_t opcode) {
+  uint8_t val = fetch();
+  uint16_t diff = AF.hi - val;
+  writeFlag(Flag::Z, (diff & 0xFF) == 0);
+  writeFlag(Flag::N, 1);
+  subSetH(AF.hi, val);
+  writeFlag(Flag::C, AF.hi < val);
+}
+
 /*
  * Jump s8
  * Moves the PC by a signed offset if a jump occurs. Flags determine this
@@ -600,22 +727,10 @@ void Cpu::handler_JR_s8(uint8_t opcode) {
  *
  * Decode the register based on opcode, and perform the proper bit rotation.
  */
-void Cpu::handler_RRC_r8(uint8_t opcode) {
-  uint8_t *reg = decode_reg8(opcode);
-  rotateRightThroughCarry(*reg);
-}
-void Cpu::handler_RLC_r8(uint8_t opcode) {
-  uint8_t *reg = decode_reg8(opcode);
-  rotateLeftThroughCarry(*reg);
-}
-void Cpu::handler_RR_r8(uint8_t opcode) {
-  uint8_t *reg = decode_reg8(opcode);
-  rotateRight(*reg);
-}
-void Cpu::handler_RL_r8(uint8_t opcode) {
-  uint8_t *reg = decode_reg8(opcode);
-  rotateLeft(*reg);
-}
+void Cpu::handler_RRC_r8(uint8_t opcode) { rotateRightCarry(AF.hi); }
+void Cpu::handler_RLC_r8(uint8_t opcode) { rotateLeftCarry(AF.hi); }
+void Cpu::handler_RR_r8(uint8_t opcode) { rotateRight(AF.hi); }
+void Cpu::handler_RL_r8(uint8_t opcode) { rotateLeft(AF.hi); }
 
 /*
  * DAA handler
@@ -633,7 +748,7 @@ void Cpu::handler_DAA(uint8_t opcode) {
     if (readFlag(Flag::H) || (decimal & 0x0F) > 0x09) { // Adjust lower nibble
       decimal += 0x06;
     }
-    if (carry || decimal > 0x9F) { // Adjust upper nibble
+    if (carry || decimal > 0x99) { // Adjust upper nibble
       decimal += 0x60;
       carry = true;
     }
@@ -668,7 +783,7 @@ void Cpu::handler_CPL(uint8_t opcode) {
  */
 void Cpu::handler_XCF(uint8_t opcode) {
   if (opcode == 0x37) {
-    writeFlag(Flag::C, 0);
+    writeFlag(Flag::C, 1);
   } else {
     writeFlag(Flag::C, !readFlag(Flag::C));
   }
@@ -722,6 +837,61 @@ void Cpu::handler_POP(uint8_t opcode) {
     *dst &= 0xFFF0;
 }
 
+void Cpu::handler_JP_a16(uint8_t opcode) {
+  bool jump = false;
+  uint16_t addr = fetch16();
+  switch (opcode) {
+  case 0xC2:
+    jump = !readFlag(Flag::Z);
+    break;
+  case 0xC3:
+    jump = true;
+    break;
+  case 0xCA:
+    jump = readFlag(Flag::Z);
+    break;
+  case 0xD2:
+    jump = !readFlag(Flag::C);
+    break;
+  case 0xDA:
+    jump = readFlag(Flag::C);
+    break;
+  }
+  if (jump) {
+    PC.val = addr;
+    t_states += 4;
+  }
+}
+
+void Cpu::handler_JP_HL(uint8_t opcode) { PC.val = HL.val; }
+
+void Cpu::handler_CALL_a16(uint8_t opcode) {
+  bool call = false;
+  uint16_t funcAddr = fetch16();
+  switch (opcode) {
+  case 0xC4:
+    call = !readFlag(Flag::Z);
+    break;
+  case 0xCC:
+    call = readFlag(Flag::Z);
+    break;
+  case 0xCD:
+    call = true;
+    break;
+  case 0xD4:
+    call = !readFlag(Flag::C);
+    break;
+  case 0xDC:
+    call = readFlag(Flag::C);
+    break;
+  }
+  if (call) {
+    t_states += 12;
+    push16(PC.val);
+    PC.val = funcAddr;
+  }
+}
+
 /*
  * Disable or enable interupt master enable (IME) flag
  */
@@ -730,6 +900,12 @@ void Cpu::handler_DI_EI(uint8_t opcode) {
     IME = 0;
   else
     IME_Pending = true;
+}
+
+void Cpu::handler_RST(uint8_t opcode) {
+  uint8_t offset = opcode & 0b00111000;
+  push16(PC.val);
+  PC.val = 0x00 + offset;
 }
 
 /*

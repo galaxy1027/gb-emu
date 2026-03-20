@@ -49,6 +49,12 @@ private:
   void execute(uint8_t opcode);
   void writeByteMemory(uint8_t data, uint16_t address);
   uint8_t readByteMemory(uint16_t addr);
+
+  uint8_t readReg8(uint8_t opcode, char type);
+  void writeReg8(uint8_t opcode, uint8_t val);
+  void writeReg8(uint8_t opcode, char type, uint8_t val);
+
+  uint8_t *getMemoryPtr(uint16_t address);
   void store8(uint8_t data, uint16_t address);
   void store16(uint16_t data, uint16_t address);
   uint8_t read8(uint16_t addr);
@@ -56,17 +62,15 @@ private:
   void writeFlag(Flag F, bool value);
   bool readFlag(Flag F);
   void load8(uint16_t addr, uint8_t &dest);
-  void loadReg(uint16_t addr, Reg16 &dest);
-  void incReg(uint8_t &reg);
-  void decReg(uint8_t &reg);
+  void loadReg16(uint16_t addr, Reg16 &dest);
   void incReg16(Reg16 &reg);
   void decReg16(Reg16 &reg);
   void addReg16(uint16_t &source, uint16_t &dest);
   void addSetH(uint8_t a, uint8_t b);
   void add16SetH(uint16_t a, uint16_t b);
   void subSetH(uint8_t a, uint8_t b);
-  void rotateLeftThroughCarry(uint8_t &reg);
-  void rotateRightThroughCarry(uint8_t &reg);
+  void rotateLeftCarry(uint8_t &reg);
+  void rotateRightCarry(uint8_t &reg);
   void rotateLeft(uint8_t &reg);
   void rotateRight(uint8_t &reg);
   uint8_t pop();
@@ -98,6 +102,14 @@ private:
   void handler_XOR_r8(uint8_t opcode);
   void handler_OR_r8(uint8_t opcode);
   void handler_CP_r8(uint8_t opcode);
+  void handler_ADD_r8_d8(uint8_t opcode);
+  void handler_ADC_r8_d8(uint8_t opcode);
+  void handler_SUB_d8(uint8_t opcode);
+  void handler_SBC_r8_d8(uint8_t opcode);
+  void handler_AND_d8(uint8_t opcode);
+  void handler_XOR_d8(uint8_t opcode);
+  void handler_OR_d8(uint8_t opcode);
+  void handler_CP_d8(uint8_t opcode);
   void handler_JR_s8(uint8_t opcode);
   void handler_RRC_r8(uint8_t opcode);
   void handler_RLC_r8(uint8_t opcode);
@@ -109,7 +121,11 @@ private:
   void handler_RET(uint8_t opcode);
   void handler_PUSH(uint8_t opcode);
   void handler_POP(uint8_t opcode);
+  void handler_JP_a16(uint8_t opcode);
+  void handler_JP_HL(uint8_t opcode);
+  void handler_CALL_a16(uint8_t opcode);
   void handler_DI_EI(uint8_t opcode);
+  void handler_RST(uint8_t opcode);
   void handler_STOP(uint8_t opcode);
 
   void initOpcodeTable();
