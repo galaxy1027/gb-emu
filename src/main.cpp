@@ -9,7 +9,9 @@ int main(int argc, char **argv) {
     }
 
     auto cpu = std::make_unique<Cpu>();
-    cpu->loadRom(std::string(argv[1]));
+    if (cpu->loadRom(std::string(argv[1])) == 1) {
+        return 1;
+    }
     while (true) {
         cpu->cycle();
     }

@@ -18,11 +18,11 @@ Cpu::Cpu() {
     PC.val = (0x0100);
 }
 
-int Cpu::loadRom(const std::string &path) {
+int Cpu::loadRom(const std::filesystem::path &path) {
     int loaded = 0;
-    std::ifstream file(path, std::ios::binary);
-
-    if (!file) {
+    std::filesystem::path filePath = path;
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file || filePath.extension() != ".gb") {
         std::cerr << "Error: Attempted to load invalid ROM!\n";
         loaded = 1;
     } else {
@@ -34,6 +34,7 @@ int Cpu::loadRom(const std::string &path) {
         }
         std::cout << "Rom Loaded\n";
     }
+    file.close();
     return loaded;
 }
 

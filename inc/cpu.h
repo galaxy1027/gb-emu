@@ -3,7 +3,7 @@
 #include "opcode.h"
 #include <array>
 #include <cstdint>
-#include <string>
+#include <filesystem>
 
 /*
  * Flag values indicate bit position in the F register
@@ -156,6 +156,6 @@ class Cpu {
 
   public:
     Cpu();
-    int loadRom(const std::string &path);
+    int loadRom(const std::filesystem::path &filePath);
     void cycle();
 };
