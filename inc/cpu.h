@@ -41,12 +41,13 @@ class Cpu {
     int t_cycles;
     std::array<opcode, 256> opcodeTable;
     std::array<uint8_t, 65536> memory;
+    uint8_t opcodeFetched;
 
     /* Private helper functions */
 
     uint8_t fetch();
     uint16_t fetch16();
-    void execute(uint8_t opcode);
+    void execute();
     void writeByteMemory(uint16_t address, uint8_t data);
     uint8_t readByteMemory(uint16_t addr);
 
@@ -158,4 +159,7 @@ class Cpu {
     Cpu();
     int loadRom(const std::filesystem::path &filePath);
     void cycle();
+    void step();
+    void printRegs();
+    void printDebug();
 };

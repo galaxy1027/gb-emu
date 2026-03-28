@@ -764,7 +764,7 @@ void Cpu::handler_DAA(uint8_t opcode) {
             (decimal & 0x0F) > 0x09) { // Adjust lower nibble
             decimal += 0x06;
         }
-        if (carry || decimal > 0x9F) { // Adjust upper nibble
+        if (carry || decimal > 0x99) { // Adjust upper nibble
             decimal += 0x60;
             carry = true;
         }

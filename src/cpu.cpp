@@ -1,6 +1,7 @@
 #include "cpu.h"
 #include "opcode.h"
 #include <cstdint>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -18,9 +19,8 @@ Cpu::Cpu() {
     PC.val = (0x0100);
 }
 
-int Cpu::loadRom(const std::filesystem::path &path) {
+int Cpu::loadRom(const std::filesystem::path &filePath) {
     int loaded = 0;
-    std::filesystem::path filePath = path;
     std::ifstream file(filePath, std::ios::binary);
     if (!file || filePath.extension() != ".gb") {
         std::cerr << "Error: Attempted to load invalid ROM!\n";
@@ -45,21 +45,28 @@ uint16_t Cpu::fetch16() {
     uint8_t hi = fetch();
     return ((uint16_t)hi << 8) | lo;
 }
-void Cpu::execute(uint8_t opcode_fetched) {
-    const struct opcode *op = &opcodeTable[opcode_fetched];
+void Cpu::execute() {
+    const struct opcode *op = &opcodeTable[opcodeFetched];
     if (op->handler) {
-        (this->*op->handler)(opcode_fetched);
+        (this->*op->handler)(opcodeFetched);
         // std::cout << "Opcode 0x" << std::hex << (int)opcode_fetched << "\n";
     } else
-        std::cout << "Unimplemented opcode 0x" << std::hex
-                  << (int)opcode_fetched << "\n";
+        std::cout << "Unimplemented opcode 0x" << std::hex << (int)opcodeFetched
+                  << "\n";
     t_cycles = op->t_states;
+}
+
+void Cpu::step() {
+    cycle();
+    while (t_cycles > 0) {
+        cycle();
+    }
 }
 
 void Cpu::cycle() {
     if (t_cycles == 0 && !stopped) {
-        uint8_t opcode = fetch();
-        execute(opcode);
+        opcodeFetched = fetch();
+        execute();
 
         if (IME_Pending) {
             IME = IME_Pending;
@@ -267,4 +274,20 @@ void Cpu::push(uint8_t data) {
 void Cpu::push16(uint16_t data) {
     push((data >> 8) & 0x00FF);
     push(data & 0x00FF);
+}
+
+/*
+ * Debug functions
+ */
+void Cpu::printRegs() {
+    std::cout << std::format("REGISTERS:\nAF: 0x{:x}\nBC: 0x{:x}\nDE: "
+                             "0x{:x}\nHL: 0x{:x}\nSP: 0x{:x}\nPC: 0x{:x}\n",
+                             AF.val, BC.val, DE.val, HL.val, SP.val, PC.val);
+};
+
+void Cpu::printDebug() {
+    if (opcodeFetched != 0x10) { // Print everything except STOP
+        std::cout << opcodeTable[opcodeFetched].name << "\n";
+        printRegs();
+    }
 }
