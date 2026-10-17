@@ -194,13 +194,23 @@ void Cpu::rotateRightCarry(uint8_t &reg) {
 }
 
 void Cpu::rotateLeft(uint8_t &reg) {
+
     bool oldCarry = readFlag(Flag::C);
+    writeFlag(Flag::Z, 0);
+    writeFlag(Flag::N, 0);
+    writeFlag(Flag::H, 0);
     writeFlag(Flag::C, (reg & 0x80) >> 7);
+
     reg = (reg << 1) | (static_cast<uint8_t>(oldCarry));
 }
 void Cpu::rotateRight(uint8_t &reg) {
+
     bool oldCarry = readFlag(Flag::C);
+    writeFlag(Flag::Z, 0);
+    writeFlag(Flag::N, 0);
+    writeFlag(Flag::H, 0);
     writeFlag(Flag::C, (reg & 0x01));
+
     reg = (reg >> 1) | (static_cast<uint8_t>(oldCarry) << 7);
 }
 
@@ -220,7 +230,7 @@ void Cpu::shiftLeftArithmetic(uint8_t &reg) {
  * previous value.
  */
 void Cpu::shiftRightArithmetic(uint8_t &reg) {
-    uint8_t oldBit7 = reg & 0x7F;
+    uint8_t oldBit7 = reg & 0x80;
     writeFlag(Flag::C, reg & 0x01);
     reg = reg >> 1;
     reg |= oldBit7;
@@ -231,7 +241,6 @@ void Cpu::shiftRightArithmetic(uint8_t &reg) {
 void Cpu::shiftRightLogical(uint8_t &reg) {
     writeFlag(Flag::C, reg & 0x01);
     reg = reg >> 1;
-    reg &= 0xEF;
     writeFlag(Flag::N, 0);
     writeFlag(Flag::H, 0);
     writeFlag(Flag::Z, reg == 0);

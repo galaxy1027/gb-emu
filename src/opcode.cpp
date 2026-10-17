@@ -757,27 +757,36 @@ void Cpu::handler_RL_r8(uint8_t opcode) { rotateLeft(AF.hi); }
 void Cpu::handler_DAA(uint8_t opcode) {
 
     uint16_t decimal = AF.hi;
+    uint8_t adjust_decimal = 0;
     bool carry = readFlag(Flag::C);
 
-    if (!readFlag(Flag::N)) { // Previous operation was addition
-        if (readFlag(Flag::H) ||
-            (decimal & 0x0F) > 0x09) { // Adjust lower nibble
-            decimal += 0x06;
+    /* Previous operation was ADDITION */
+    if (!readFlag(Flag::N)) {
+        // Adjust Lower Nibble
+        if (readFlag(Flag::H) || (decimal & 0x0F) > 0x09) {
+            adjust_decimal |= 0x06;
         }
-        if (carry || decimal > 0x99) { // Adjust upper nibble
-            decimal += 0x60;
+        // Adjust Upper Nibble
+        if (carry || decimal > 0x99) {
+            adjust_decimal |= 0x60;
             carry = true;
         }
-    } else {                     // Previous operation was subtraction
-        if (readFlag(Flag::H)) { // Adjust lower nibble
-            decimal = (decimal - 0x06) & 0xFF;
+        decimal += adjust_decimal;
+
+        /* Previous operation was SUBTRACTION */
+    } else {
+        // Adjust Lower Nibble
+        if (readFlag(Flag::H)) {
+            adjust_decimal |= 0x06;
         }
-        if (carry) { // Adjust upper nibble
-            decimal -= 0x60;
+        // Adjust Upper Nibble
+        if (carry) {
+            adjust_decimal |= 0x60;
         }
+        decimal -= adjust_decimal;
     }
 
-    AF.hi = decimal & 0x00FF;
+    AF.hi = decimal;
     writeFlag(Flag::H, 0);
     writeFlag(Flag::Z, AF.hi == 0);
     writeFlag(Flag::C, carry);
