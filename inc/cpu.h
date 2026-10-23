@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bus.h"
 #include "opcode.h"
 #include <array>
 #include <cstdint>
@@ -37,19 +38,18 @@ struct Reg16 {
 class Cpu {
   private:
     Reg16 AF, BC, DE, HL, SP, PC;
-    bool IME, IME_Pending, stopped;
+    bool IME, IME_Pending, stopped, halted;
     int t_cycles;
     std::array<opcode, 256> opcodeTable;
-    std::array<uint8_t, 65536> memory;
     uint8_t opcodeFetched;
+
+    Bus &bus;
 
     /* Private helper functions */
 
     uint8_t fetch();
     uint16_t fetch16();
     void execute();
-    void writeByteMemory(uint16_t address, uint8_t data);
-    uint8_t readByteMemory(uint16_t addr);
 
     uint8_t readReg8(uint8_t opcode, char type);
     void writeReg8(uint8_t opcode, uint8_t val);
@@ -90,6 +90,11 @@ class Cpu {
     uint8_t *decode_reg8(uint8_t opcode);
     uint16_t *decode_reg16(uint8_t opcode);
     uint16_t *decode_reg16_stack_ops(uint8_t opcode);
+
+    /* Interrupt */
+    void requestInterrupt(int bit);
+    void serviceInterrupt(uint8_t pending);
+
     /* Opcode handlers */
 
     void handler_NOP(uint8_t opcode);
@@ -137,8 +142,10 @@ class Cpu {
     void handler_JP_HL(uint8_t opcode);
     void handler_CALL_a16(uint8_t opcode);
     void handler_DI_EI(uint8_t opcode);
+    void handler_RETI(uint8_t opcode);
     void handler_RST(uint8_t opcode);
     void handler_STOP(uint8_t opcode);
+    void handler_HALT(uint8_t opcode);
     void handler_CB_PREFIX(uint8_t opcode);
 
     /* CB prefixed helpers */
@@ -156,10 +163,30 @@ class Cpu {
     void initOpcodeTable();
 
   public:
-    Cpu();
+    explicit Cpu(Bus &b) : bus(b) {
+        PC.val = 0x1000;
+        initOpcodeTable();
+        AF.val = (0x01B0);
+        BC.val = (0x0013);
+        DE.val = (0x00D8);
+        HL.val = (0x014D);
+
+        SP.val = (0xFFFE);
+        PC.val = (0x0100);
+
+        halted = false;
+        stopped = false;
+        IME = false;
+        IME_Pending = false;
+    };
+
     int loadRom(const std::filesystem::path &filePath);
-    void cycle();
-    void step();
+    int step();
+    void writeByteMemory(uint16_t address, uint8_t data);
+    uint8_t readByteMemory(uint16_t addr);
+    uint8_t timerReadByte(uint16_t addr);
+    void timerWriteByte(uint16_t addr, uint8_t val);
+
     void printRegs();
     void printDebug();
 };

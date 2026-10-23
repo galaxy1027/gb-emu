@@ -2,102 +2,62 @@
 #include "opcode.h"
 #include <cstdint>
 #include <format>
-#include <fstream>
 #include <iostream>
-#include <vector>
 
-Cpu::Cpu() {
-    memory.fill(0);
-    PC.val = 0x1000;
-    initOpcodeTable();
-    AF.val = (0x01B0);
-    BC.val = (0x0013);
-    DE.val = (0x00D8);
-    HL.val = (0x014D);
-
-    SP.val = (0xFFFE);
-    PC.val = (0x0100);
-}
-
-int Cpu::loadRom(const std::filesystem::path &filePath) {
-    int loaded = 0;
-    std::ifstream file(filePath, std::ios::binary);
-    if (!file || filePath.extension() != ".gb") {
-        std::cerr << "Error: Attempted to load invalid ROM!\n";
-        loaded = 1;
-    } else {
-        std::vector<uint8_t> rom((std::istreambuf_iterator<char>(file)),
-                                 std::istreambuf_iterator<char>());
-
-        for (size_t i = 0; i < rom.size() && i < 0x8000; i++) {
-            memory[i] = rom[i];
-        }
-        std::cout << "Rom Loaded\n";
-    }
-    file.close();
-    return loaded;
-}
-
-uint8_t Cpu::fetch() { return memory[PC.val++]; }
+uint8_t Cpu::fetch() { return bus.read(PC.val++); }
 
 uint16_t Cpu::fetch16() {
     uint8_t lo = fetch();
     uint8_t hi = fetch();
     return ((uint16_t)hi << 8) | lo;
 }
+
 void Cpu::execute() {
-    const struct opcode *op = &opcodeTable[opcodeFetched];
-    if (op->handler) {
-        (this->*op->handler)(opcodeFetched);
+    const opcode &op = opcodeTable[opcodeFetched];
+    t_cycles = op.t_states;
+    if (op.handler) {
+        (this->*op.handler)(opcodeFetched);
         // std::cout << "Opcode 0x" << std::hex << (int)opcode_fetched << "\n";
     } else
         std::cout << "Unimplemented opcode 0x" << std::hex << (int)opcodeFetched
                   << "\n";
-    t_cycles = op->t_states;
 }
 
-void Cpu::step() {
-    cycle();
-    while (t_cycles > 0) {
-        cycle();
-    }
-}
+/*
+ * CPU Step
+ * Run a single instruction or service an interrupt and return the number of
+ * t-cycles that were run
+ */
+int Cpu::step() {
+    t_cycles = 0;
+    uint8_t pending = bus.pendingInterrupts();
 
-void Cpu::cycle() {
-    if (t_cycles == 0 && !stopped) {
+    if (halted) {
+        if (!pending)
+            t_cycles = 4;
+        else
+            halted = false;
+    } else if (IME && pending) {
+        serviceInterrupt(pending);
+        t_cycles = 20;
+    } else {
+        bool eiPending = IME_Pending;
         opcodeFetched = fetch();
         execute();
-
-        if (IME_Pending) {
-            IME = IME_Pending;
+        if (eiPending && IME_Pending) {
+            IME = true;
             IME_Pending = false;
         }
-
-    } else {
-        t_cycles--;
     }
+    return t_cycles;
 }
 
 /***********************************************************
  * Private Helper Functions
  **********************************************************/
 
-void Cpu::writeByteMemory(uint16_t address, uint8_t data) {
-    memory[address] = data;
-
-    if (address == 0xFF02) { // Serial port is being written to
-        if (data & 0x80) {   // Transfer start signal
-            uint8_t ch = memory[0xFF01];
-            std::cout << (char)ch;
-            // Complete transfer
-            memory[0xFF01] = 0xFF;
-            memory[0xFF02] &= ~0x80;
-        }
-    }
-}
-uint8_t Cpu::readByteMemory(uint16_t addr) { return memory[addr]; }
-
-uint8_t *Cpu::getMemoryPtr(uint16_t addr) { return &memory[addr]; }
+void Cpu::writeByteMemory(uint16_t addr, uint8_t val) { bus.write(addr, val); }
+uint8_t Cpu::readByteMemory(uint16_t addr) { return bus.read(addr); }
 
 void Cpu::store8(uint8_t data, uint16_t address) {
     writeByteMemory(address, data);

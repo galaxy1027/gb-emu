@@ -129,7 +129,7 @@ void Cpu::initOpcodeTable() {
     opcodeTable[0x73] = {"LD (HL), E", &Cpu::handler_LD_r8_r8, 8};
     opcodeTable[0x74] = {"LD (HL), H", &Cpu::handler_LD_r8_r8, 8};
     opcodeTable[0x75] = {"LD (HL), L", &Cpu::handler_LD_r8_r8, 8};
-    opcodeTable[0x76] = {"HALT", nullptr, 4};
+    opcodeTable[0x76] = {"HALT", &Cpu::handler_HALT, 4};
     opcodeTable[0x77] = {"LD (HL), A", &Cpu::handler_LD_r8_r8, 8};
     opcodeTable[0x78] = {"LD A, B", &Cpu::handler_LD_r8_r8, 4};
     opcodeTable[0x79] = {"LD A, C", &Cpu::handler_LD_r8_r8, 4};
@@ -234,7 +234,7 @@ void Cpu::initOpcodeTable() {
     opcodeTable[0xD6] = {"SUB d8", &Cpu::handler_SUB_d8, 8};
     opcodeTable[0xD7] = {"RST 2", &Cpu::handler_RST, 16};
     opcodeTable[0xD8] = {"RET C", &Cpu::handler_RET, 8};
-    opcodeTable[0xD9] = {"RETI", nullptr, 16};
+    opcodeTable[0xD9] = {"RETI", &Cpu::handler_RETI, 16};
     opcodeTable[0xDA] = {"JP C, a16", &Cpu::handler_JP_a16, 12};
     opcodeTable[0xDB] = {"UNDEFINED", nullptr, 0};
     opcodeTable[0xDC] = {"CALL C, a16", &Cpu::handler_CALL_a16, 0};
@@ -935,10 +935,21 @@ void Cpu::handler_CALL_a16(uint8_t opcode) {
  * Disable or enable interupt master enable (IME) flag
  */
 void Cpu::handler_DI_EI(uint8_t opcode) {
-    if (opcode == 0xF3)
+    if (opcode == 0xF3) {
         IME = 0;
-    else
+        IME_Pending = false;
+    } else {
         IME_Pending = true;
+    }
+}
+
+/*
+ * Return from interrupt service routine (ISR)
+ */
+void Cpu::handler_RETI(uint8_t opcode) {
+    PC.val = pop16();
+    IME = true;
+    IME_Pending = false;
 }
 
 void Cpu::handler_RST(uint8_t opcode) {
@@ -957,6 +968,8 @@ void Cpu::handler_STOP(uint8_t opcode) {
     stopped = true;
     std::cout << "\nSTOPPED\n";
 }
+
+void Cpu::handler_HALT(uint8_t opcode) { halted = true; }
 
 /*
  * Layouut of a CB prefixed opcode:
