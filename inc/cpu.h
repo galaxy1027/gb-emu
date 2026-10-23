@@ -138,6 +138,8 @@ class Cpu {
     void handler_POP(uint8_t opcode);
     void handler_LD_HL_SP_s8(uint8_t opcode);
     void handler_LD_SP_HL(uint8_t opcode);
+    void handler_LD_A_MEM(uint8_t opcode);
+    void handler_ADD_SP_S8(uint8_t opcode);
     void handler_JP_a16(uint8_t opcode);
     void handler_JP_HL(uint8_t opcode);
     void handler_CALL_a16(uint8_t opcode);

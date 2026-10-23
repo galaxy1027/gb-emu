@@ -244,13 +244,13 @@ void Cpu::initOpcodeTable() {
 
     opcodeTable[0xE0] = {"LD (a8), A", &Cpu::handler_LD_a8, 12};
     opcodeTable[0xE1] = {"POP HL", &Cpu::handler_POP, 12};
-    opcodeTable[0xE2] = {"LD (C), A", nullptr, 8};
+    opcodeTable[0xE2] = {"LD (C), A", &Cpu::handler_LD_A_MEM, 8};
     opcodeTable[0xE3] = {"UNDEFINED", nullptr, 0};
     opcodeTable[0xE4] = {"UNDEFINED", nullptr, 0};
     opcodeTable[0xE5] = {"PUSH HL", &Cpu::handler_PUSH, 16};
     opcodeTable[0xE6] = {"AND d8", &Cpu::handler_AND_d8, 8};
     opcodeTable[0xE7] = {"RST 4", &Cpu::handler_RST, 16};
-    opcodeTable[0xE8] = {"ADD SP, s8", nullptr, 16};
+    opcodeTable[0xE8] = {"ADD SP, s8", &Cpu::handler_ADD_SP_S8, 16};
     opcodeTable[0xE9] = {"JP HL", &Cpu::handler_JP_HL, 4};
     opcodeTable[0xEA] = {"LD (a16), A", &Cpu::handler_LD_a16, 16};
     opcodeTable[0xEB] = {"UNDEFINED", nullptr, 0};
@@ -261,7 +261,7 @@ void Cpu::initOpcodeTable() {
 
     opcodeTable[0xF0] = {"LD A, (a8)", &Cpu::handler_LD_a8, 12};
     opcodeTable[0xF1] = {"POP AF", &Cpu::handler_POP, 12};
-    opcodeTable[0xF2] = {"LD A, (C)", nullptr, 8};
+    opcodeTable[0xF2] = {"LD A, (C)", &Cpu::handler_LD_A_MEM, 8};
     opcodeTable[0xF3] = {"DI", &Cpu::handler_DI_EI, 4};
     opcodeTable[0xF4] = {"UNDEFINED", nullptr, 0};
     opcodeTable[0xF5] = {"PUSH AF", &Cpu::handler_PUSH, 16};
@@ -865,16 +865,34 @@ void Cpu::handler_POP(uint8_t opcode) {
 void Cpu::handler_LD_HL_SP_s8(uint8_t opcode) {
     uint8_t u8 = fetch();
     int8_t s8 = static_cast<int8_t>(u8);
-    uint16_t sum = SP.val + s8;
 
     writeFlag(Flag::Z, 0);
     writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, ((SP.val & 0xF) + (s8 & 0xF)) > 0xF);
-    writeFlag(Flag::C, ((SP.val & 0xFF) + s8) > 0xFF);
+    writeFlag(Flag::H, ((SP.val & 0x0F) + (u8 & 0x0F)) > 0x0F);
+    writeFlag(Flag::C, ((SP.val & 0xFF) + u8) > 0xFF);
 
-    HL.val = sum;
+    HL.val = SP.val + s8;
 }
 void Cpu::handler_LD_SP_HL(uint8_t opcode) { SP.val = HL.val; }
+
+void Cpu::handler_LD_A_MEM(uint8_t opcode) {
+    uint16_t addr = 0xFF00 | BC.lo;
+    if (opcode == 0xE2) {
+        bus.write(addr, AF.hi);
+    } else {
+        AF.hi = bus.read(addr);
+    }
+}
+
+void Cpu::handler_ADD_SP_S8(uint8_t opcode) {
+    uint8_t u8 = fetch();
+    int8_t s8 = static_cast<int8_t>(u8);
+    writeFlag(Flag::Z, 0);
+    writeFlag(Flag::N, 0);
+    writeFlag(Flag::H, ((SP.val & 0x0F) + (u8 & 0x0F)) > 0x0F);
+    writeFlag(Flag::C, ((SP.val & 0xFF) + u8) > 0xFF);
+    SP.val += s8;
+}
 
 void Cpu::handler_JP_a16(uint8_t opcode) {
     bool jump = false;
