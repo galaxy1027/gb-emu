@@ -237,7 +237,7 @@ void Cpu::initOpcodeTable() {
     opcodeTable[0xD9] = {"RETI", &Cpu::handler_RETI, 16};
     opcodeTable[0xDA] = {"JP C, a16", &Cpu::handler_JP_a16, 12};
     opcodeTable[0xDB] = {"UNDEFINED", nullptr, 0};
-    opcodeTable[0xDC] = {"CALL C, a16", &Cpu::handler_CALL_a16, 0};
+    opcodeTable[0xDC] = {"CALL C, a16", &Cpu::handler_CALL_a16, 12};
     opcodeTable[0xDD] = {"UNDEFINED", nullptr, 0};
     opcodeTable[0xDE] = {"SBC A, d8", &Cpu::handler_SBC_r8_d8, 8};
     opcodeTable[0xDF] = {"RST 3", &Cpu::handler_RST, 16};
@@ -522,8 +522,8 @@ void Cpu::handler_INC_DEC_r8(uint8_t opcode) {
     bool increment = !(opcode & 0x01);
     uint8_t newVal = increment ? oldVal + 1 : oldVal - 1;
     writeReg8(opcode, 'd', newVal);
-    writeFlag(Flag::Z, newVal == 0);
-    writeFlag(Flag::N, !increment);
+    writeFlag(CPU_Flag::Z, newVal == 0);
+    writeFlag(CPU_Flag::N, !increment);
     increment ? addSetH(oldVal, 1) : subSetH(oldVal, 1);
 }
 
@@ -545,74 +545,74 @@ void Cpu::handler_ADD_r8_r8(uint8_t opcode) {
     uint8_t src = readReg8(opcode, 's');
     uint16_t sum = AF.hi + src;
     uint8_t result = sum & 0x00FF;
-    writeFlag(Flag::Z, result == 0);
-    writeFlag(Flag::N, 0);
+    writeFlag(CPU_Flag::Z, result == 0);
+    writeFlag(CPU_Flag::N, 0);
     addSetH(AF.hi, src);
-    writeFlag(Flag::C, sum > 0x00FF);
+    writeFlag(CPU_Flag::C, sum > 0x00FF);
     AF.hi = result;
 }
 void Cpu::handler_ADC_r8_r8(uint8_t opcode) {
     uint8_t src = readReg8(opcode, 's');
-    uint8_t carry = readFlag(Flag::C) ? 1 : 0;
+    uint8_t carry = readFlag(CPU_Flag::C) ? 1 : 0;
     bool halfCarry = ((AF.hi & 0x0F) + (src & 0x0F) + carry) > 0x0F;
     uint16_t sum = src + AF.hi + carry;
     uint8_t result = sum & 0x00FF;
-    writeFlag(Flag::Z, result == 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, halfCarry);
-    writeFlag(Flag::C, sum > 0x00FF);
+    writeFlag(CPU_Flag::Z, result == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, halfCarry);
+    writeFlag(CPU_Flag::C, sum > 0x00FF);
     AF.hi = result;
 }
 
 void Cpu::handler_SUB_r8(uint8_t opcode) {
     uint8_t src = readReg8(opcode, 's');
     uint8_t diff = AF.hi - src;
-    writeFlag(Flag::Z, diff == 0);
-    writeFlag(Flag::N, 1);
+    writeFlag(CPU_Flag::Z, diff == 0);
+    writeFlag(CPU_Flag::N, 1);
     subSetH(AF.hi, src);
-    writeFlag(Flag::C, AF.hi < src);
+    writeFlag(CPU_Flag::C, AF.hi < src);
     AF.hi = diff;
 }
 
 void Cpu::handler_SBC_r8_r8(uint8_t opcode) {
     uint8_t src = readReg8(opcode, 's');
-    uint8_t carry = readFlag(Flag::C) == true ? 1 : 0;
+    uint8_t carry = readFlag(CPU_Flag::C) == true ? 1 : 0;
     uint8_t diff = AF.hi - src - carry;
-    writeFlag(Flag::Z, diff == 0);
-    writeFlag(Flag::N, 1);
-    writeFlag(Flag::H, (AF.hi & 0x0F) < ((src & 0x0F) + carry));
-    writeFlag(Flag::C, AF.hi < (src + carry));
+    writeFlag(CPU_Flag::Z, diff == 0);
+    writeFlag(CPU_Flag::N, 1);
+    writeFlag(CPU_Flag::H, (AF.hi & 0x0F) < ((src & 0x0F) + carry));
+    writeFlag(CPU_Flag::C, AF.hi < (src + carry));
     AF.hi = diff;
 }
 
 void Cpu::handler_AND_r8(uint8_t opcode) {
     AF.hi &= (readReg8(opcode, 's'));
-    writeFlag(Flag::Z, AF.hi == 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 1);
-    writeFlag(Flag::C, 0);
+    writeFlag(CPU_Flag::Z, AF.hi == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 1);
+    writeFlag(CPU_Flag::C, 0);
 }
 void Cpu::handler_XOR_r8(uint8_t opcode) {
     AF.hi ^= readReg8(opcode, 's');
-    writeFlag(Flag::Z, AF.hi == 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::C, 0);
+    writeFlag(CPU_Flag::Z, AF.hi == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::C, 0);
 }
 void Cpu::handler_OR_r8(uint8_t opcode) {
     AF.hi |= readReg8(opcode, 's');
-    writeFlag(Flag::Z, AF.hi == 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::C, 0);
+    writeFlag(CPU_Flag::Z, AF.hi == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::C, 0);
 }
 void Cpu::handler_CP_r8(uint8_t opcode) {
     uint8_t src = readReg8(opcode, 's');
     uint8_t diff = AF.hi - src;
-    writeFlag(Flag::Z, diff == 0);
-    writeFlag(Flag::N, 1);
+    writeFlag(CPU_Flag::Z, diff == 0);
+    writeFlag(CPU_Flag::N, 1);
     subSetH(AF.hi, src);
-    writeFlag(Flag::C, AF.hi < src);
+    writeFlag(CPU_Flag::C, AF.hi < src);
 }
 
 /*
@@ -623,83 +623,83 @@ void Cpu::handler_ADD_r8_d8(uint8_t opcode) {
     uint8_t val = fetch();
     uint16_t sum = val + AF.hi;
     uint8_t result = sum & 0x00FF;
-    writeFlag(Flag::Z, result == 0);
-    writeFlag(Flag::N, 0);
+    writeFlag(CPU_Flag::Z, result == 0);
+    writeFlag(CPU_Flag::N, 0);
     addSetH(AF.hi, val);
-    writeFlag(Flag::C, sum > 0x00FF);
+    writeFlag(CPU_Flag::C, sum > 0x00FF);
     AF.hi = result;
 }
 
 void Cpu::handler_ADC_r8_d8(uint8_t opcode) {
     uint8_t val = fetch();
-    int carry = readFlag(Flag::C) ? 1 : 0;
+    int carry = readFlag(CPU_Flag::C) ? 1 : 0;
     uint16_t sum = val + AF.hi + carry;
     uint8_t result = sum & 0x00FF;
-    writeFlag(Flag::Z, result == 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, ((AF.hi & 0xF) + (val & 0xF) + carry) > 0xF);
-    writeFlag(Flag::C, sum > 0x00FF);
+    writeFlag(CPU_Flag::Z, result == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, ((AF.hi & 0xF) + (val & 0xF) + carry) > 0xF);
+    writeFlag(CPU_Flag::C, sum > 0x00FF);
     AF.hi = result;
 }
 
 void Cpu::handler_SUB_d8(uint8_t opcode) {
     uint8_t val = fetch();
     uint16_t diff = AF.hi - val;
-    writeFlag(Flag::Z, (diff & 0xFF) == 0);
-    writeFlag(Flag::N, 1);
+    writeFlag(CPU_Flag::Z, (diff & 0xFF) == 0);
+    writeFlag(CPU_Flag::N, 1);
     subSetH(AF.hi, val);
-    writeFlag(Flag::C, AF.hi < val);
+    writeFlag(CPU_Flag::C, AF.hi < val);
     AF.hi = diff & 0x00FF;
 }
 
 void Cpu::handler_SBC_r8_d8(uint8_t opcode) {
     uint8_t val = fetch();
-    int carry = readFlag(Flag::C) ? 1 : 0;
+    int carry = readFlag(CPU_Flag::C) ? 1 : 0;
     uint16_t diff = AF.hi - val - carry;
-    writeFlag(Flag::Z, (diff & 0xFF) == 0);
-    writeFlag(Flag::N, 1);
-    writeFlag(Flag::H, (AF.hi & 0xF) < ((val & 0xF) + carry));
-    writeFlag(Flag::C, AF.hi < (val + carry));
+    writeFlag(CPU_Flag::Z, (diff & 0xFF) == 0);
+    writeFlag(CPU_Flag::N, 1);
+    writeFlag(CPU_Flag::H, (AF.hi & 0xF) < ((val & 0xF) + carry));
+    writeFlag(CPU_Flag::C, AF.hi < (val + carry));
     AF.hi = diff & 0x00FF;
 }
 
 void Cpu::handler_AND_d8(uint8_t opcode) {
     uint8_t val = fetch();
     uint8_t result = AF.hi & val;
-    writeFlag(Flag::Z, result == 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 1);
-    writeFlag(Flag::C, 0);
+    writeFlag(CPU_Flag::Z, result == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 1);
+    writeFlag(CPU_Flag::C, 0);
     AF.hi = result & 0x00FF;
 }
 
 void Cpu::handler_XOR_d8(uint8_t opcode) {
     uint8_t val = fetch();
     uint8_t result = AF.hi ^ val;
-    writeFlag(Flag::Z, result == 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::C, 0);
+    writeFlag(CPU_Flag::Z, result == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::C, 0);
     AF.hi = result & 0x00FF;
 }
 
 void Cpu::handler_OR_d8(uint8_t opcode) {
     uint8_t val = fetch();
     uint8_t result = AF.hi | val;
-    writeFlag(Flag::Z, result == 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::C, 0);
+    writeFlag(CPU_Flag::Z, result == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::C, 0);
     AF.hi = result & 0x00FF;
 }
 
 void Cpu::handler_CP_d8(uint8_t opcode) {
     uint8_t val = fetch();
     uint16_t diff = AF.hi - val;
-    writeFlag(Flag::Z, (diff & 0xFF) == 0);
-    writeFlag(Flag::N, 1);
+    writeFlag(CPU_Flag::Z, (diff & 0xFF) == 0);
+    writeFlag(CPU_Flag::N, 1);
     subSetH(AF.hi, val);
-    writeFlag(Flag::C, AF.hi < val);
+    writeFlag(CPU_Flag::C, AF.hi < val);
 }
 
 /*
@@ -716,16 +716,16 @@ void Cpu::handler_JR_s8(uint8_t opcode) {
         jump = true;
         break;
     case 0x28:
-        jump = readFlag(Flag::Z);
+        jump = readFlag(CPU_Flag::Z);
         break;
     case 0x38:
-        jump = readFlag(Flag::C);
+        jump = readFlag(CPU_Flag::C);
         break;
     case 0x20:
-        jump = !readFlag(Flag::Z);
+        jump = !readFlag(CPU_Flag::Z);
         break;
     case 0x30:
-        jump = !readFlag(Flag::C);
+        jump = !readFlag(CPU_Flag::C);
         break;
     default:
         std::cerr << "Could not determine if jump happens\n";
@@ -758,12 +758,12 @@ void Cpu::handler_DAA(uint8_t opcode) {
 
     uint16_t decimal = AF.hi;
     uint8_t adjust_decimal = 0;
-    bool carry = readFlag(Flag::C);
+    bool carry = readFlag(CPU_Flag::C);
 
     /* Previous operation was ADDITION */
-    if (!readFlag(Flag::N)) {
+    if (!readFlag(CPU_Flag::N)) {
         // Adjust Lower Nibble
-        if (readFlag(Flag::H) || (decimal & 0x0F) > 0x09) {
+        if (readFlag(CPU_Flag::H) || (decimal & 0x0F) > 0x09) {
             adjust_decimal |= 0x06;
         }
         // Adjust Upper Nibble
@@ -776,7 +776,7 @@ void Cpu::handler_DAA(uint8_t opcode) {
         /* Previous operation was SUBTRACTION */
     } else {
         // Adjust Lower Nibble
-        if (readFlag(Flag::H)) {
+        if (readFlag(CPU_Flag::H)) {
             adjust_decimal |= 0x06;
         }
         // Adjust Upper Nibble
@@ -787,9 +787,9 @@ void Cpu::handler_DAA(uint8_t opcode) {
     }
 
     AF.hi = decimal;
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::Z, AF.hi == 0);
-    writeFlag(Flag::C, carry);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::Z, AF.hi == 0);
+    writeFlag(CPU_Flag::C, carry);
 }
 
 /*
@@ -798,8 +798,8 @@ void Cpu::handler_DAA(uint8_t opcode) {
  */
 void Cpu::handler_CPL(uint8_t opcode) {
     AF.hi = ~AF.hi;
-    writeFlag(Flag::N, 1);
-    writeFlag(Flag::H, 1);
+    writeFlag(CPU_Flag::N, 1);
+    writeFlag(CPU_Flag::H, 1);
 }
 /*
  * Carry flag handler
@@ -808,12 +808,12 @@ void Cpu::handler_CPL(uint8_t opcode) {
  */
 void Cpu::handler_XCF(uint8_t opcode) {
     if (opcode == 0x37) {
-        writeFlag(Flag::C, 1);
+        writeFlag(CPU_Flag::C, 1);
     } else {
-        writeFlag(Flag::C, !readFlag(Flag::C));
+        writeFlag(CPU_Flag::C, !readFlag(CPU_Flag::C));
     }
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
 }
 
 void Cpu::handler_RET(uint8_t opcode) {
@@ -821,11 +821,11 @@ void Cpu::handler_RET(uint8_t opcode) {
     uint8_t t_states_added = 0;
     switch (opcode) {
     case 0xC0: // RET NZ
-        ret = !readFlag(Flag::Z);
+        ret = !readFlag(CPU_Flag::Z);
         t_states_added = 12;
         break;
     case 0xC8: // RET Z
-        ret = readFlag(Flag::Z);
+        ret = readFlag(CPU_Flag::Z);
         t_states_added = 12;
         break;
     case 0xC9: // RET
@@ -833,11 +833,11 @@ void Cpu::handler_RET(uint8_t opcode) {
         t_states_added = 8;
         break;
     case 0xD0: // RET NC
-        ret = !readFlag(Flag::C);
+        ret = !readFlag(CPU_Flag::C);
         t_states_added = 12;
         break;
     case 0xD8: // RET C
-        ret = readFlag(Flag::C);
+        ret = readFlag(CPU_Flag::C);
         t_states_added = 12;
         break;
     }
@@ -866,10 +866,10 @@ void Cpu::handler_LD_HL_SP_s8(uint8_t opcode) {
     uint8_t u8 = fetch();
     int8_t s8 = static_cast<int8_t>(u8);
 
-    writeFlag(Flag::Z, 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, ((SP.val & 0x0F) + (u8 & 0x0F)) > 0x0F);
-    writeFlag(Flag::C, ((SP.val & 0xFF) + u8) > 0xFF);
+    writeFlag(CPU_Flag::Z, 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, ((SP.val & 0x0F) + (u8 & 0x0F)) > 0x0F);
+    writeFlag(CPU_Flag::C, ((SP.val & 0xFF) + u8) > 0xFF);
 
     HL.val = SP.val + s8;
 }
@@ -887,10 +887,10 @@ void Cpu::handler_LD_A_MEM(uint8_t opcode) {
 void Cpu::handler_ADD_SP_S8(uint8_t opcode) {
     uint8_t u8 = fetch();
     int8_t s8 = static_cast<int8_t>(u8);
-    writeFlag(Flag::Z, 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, ((SP.val & 0x0F) + (u8 & 0x0F)) > 0x0F);
-    writeFlag(Flag::C, ((SP.val & 0xFF) + u8) > 0xFF);
+    writeFlag(CPU_Flag::Z, 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, ((SP.val & 0x0F) + (u8 & 0x0F)) > 0x0F);
+    writeFlag(CPU_Flag::C, ((SP.val & 0xFF) + u8) > 0xFF);
     SP.val += s8;
 }
 
@@ -899,19 +899,19 @@ void Cpu::handler_JP_a16(uint8_t opcode) {
     uint16_t addr = fetch16();
     switch (opcode) {
     case 0xC2:
-        jump = !readFlag(Flag::Z);
+        jump = !readFlag(CPU_Flag::Z);
         break;
     case 0xC3:
         jump = true;
         break;
     case 0xCA:
-        jump = readFlag(Flag::Z);
+        jump = readFlag(CPU_Flag::Z);
         break;
     case 0xD2:
-        jump = !readFlag(Flag::C);
+        jump = !readFlag(CPU_Flag::C);
         break;
     case 0xDA:
-        jump = readFlag(Flag::C);
+        jump = readFlag(CPU_Flag::C);
         break;
     }
     if (jump) {
@@ -927,19 +927,19 @@ void Cpu::handler_CALL_a16(uint8_t opcode) {
     uint16_t funcAddr = fetch16();
     switch (opcode) {
     case 0xC4:
-        call = !readFlag(Flag::Z);
+        call = !readFlag(CPU_Flag::Z);
         break;
     case 0xCC:
-        call = readFlag(Flag::Z);
+        call = readFlag(CPU_Flag::Z);
         break;
     case 0xCD:
         call = true;
         break;
     case 0xD4:
-        call = !readFlag(Flag::C);
+        call = !readFlag(CPU_Flag::C);
         break;
     case 0xDC:
-        call = readFlag(Flag::C);
+        call = readFlag(CPU_Flag::C);
         break;
     }
     if (call) {
@@ -1002,10 +1002,12 @@ void Cpu::handler_HALT(uint8_t opcode) { halted = true; }
  *
  */
 void Cpu::handler_CB_PREFIX(uint8_t opcode) {
+    t_cycles += 8;
     uint8_t newOpcode = fetch();
     uint8_t regVal = readReg8(newOpcode, 's');
     uint8_t opcodeGroup = (newOpcode >> 6) & 0b11;
     uint8_t opcodeName = (newOpcode >> 3) & 0b111;
+    bool useHL = (newOpcode & 0x07) == 0x06;
 
     switch (opcodeGroup) {
     case 0x0:
@@ -1036,51 +1038,55 @@ void Cpu::handler_CB_PREFIX(uint8_t opcode) {
             break;
         }
         writeReg8(newOpcode, 's', regVal);
+        if (useHL)
+            t_cycles += 8;
         break;
     case 0x1: {
         uint8_t bit = (newOpcode >> 3) & 0b111;
         Cpu::BIT_n_r8(regVal, bit);
+        if (useHL)
+            t_cycles += 4;
     } break;
     case 0x2: {
         uint8_t bit = (newOpcode >> 3) & 0b111;
         Cpu::RES_n_r8(regVal, bit);
         writeReg8(newOpcode, 's', regVal);
+        if (useHL)
+            t_cycles += 8;
     } break;
     case 0x3: {
         uint8_t bit = (newOpcode >> 3) & 0b111;
         Cpu::SET_n_r8(regVal, bit);
         writeReg8(newOpcode, 's', regVal);
+        if (useHL)
+            t_cycles += 8;
     } break;
     }
 }
 
 void Cpu::CB_RLC_r8(uint8_t &val) {
     rotateLeftCarry(val);
-    writeFlag(Flag::Z, val == 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::N, 0);
-    t_cycles += 8;
+    writeFlag(CPU_Flag::Z, val == 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::N, 0);
 }
 void Cpu::CB_RRC_r8(uint8_t &val) {
     rotateRightCarry(val);
-    writeFlag(Flag::Z, val == 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::N, 0);
-    t_cycles += 8;
+    writeFlag(CPU_Flag::Z, val == 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::N, 0);
 }
 void Cpu::CB_RR_r8(uint8_t &val) {
     rotateRight(val);
-    writeFlag(Flag::Z, val == 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::N, 0);
-    t_cycles += 8;
+    writeFlag(CPU_Flag::Z, val == 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::N, 0);
 }
 void Cpu::CB_RL_r8(uint8_t &val) {
     rotateLeft(val);
-    writeFlag(Flag::Z, val == 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::N, 0);
-    t_cycles += 8;
+    writeFlag(CPU_Flag::Z, val == 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::N, 0);
 }
 void Cpu::CB_SLA_r8(uint8_t &val) { shiftLeftArithmetic(val); }
 void Cpu::CB_SRA_r8(uint8_t &val) { shiftRightArithmetic(val); }

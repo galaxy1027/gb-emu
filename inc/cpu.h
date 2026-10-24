@@ -12,7 +12,7 @@
  *  HI   LO
  * ZNHC XXXX
  */
-enum class Flag : int { Z = 7, N = 6, H = 5, C = 4 };
+enum class CPU_Flag : int { Z = 7, N = 6, H = 5, C = 4 };
 
 /*
  * Reg16 - a 16 bit register
@@ -60,8 +60,8 @@ class Cpu {
     void store16(uint16_t data, uint16_t address);
     uint8_t read8(uint16_t addr);
     uint16_t read16(uint16_t addr);
-    void writeFlag(Flag F, bool value);
-    bool readFlag(Flag F);
+    void writeFlag(CPU_Flag F, bool value);
+    bool readFlag(CPU_Flag F);
     void load8(uint16_t addr, uint8_t &dest);
     void loadReg16(uint16_t addr, Reg16 &dest);
     void incReg16(Reg16 &reg);

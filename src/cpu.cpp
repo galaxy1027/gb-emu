@@ -81,9 +81,9 @@ uint16_t Cpu::read16(uint16_t addr) {
  * register. The bit numbers are specified in the Flag enum class.
  */
 
-bool Cpu::readFlag(Flag F) { return (AF.lo >> static_cast<int>(F)) & 1; }
+bool Cpu::readFlag(CPU_Flag F) { return (AF.lo >> static_cast<int>(F)) & 1; }
 
-void Cpu::writeFlag(Flag F, bool value) {
+void Cpu::writeFlag(CPU_Flag F, bool value) {
     if (value) {
         AF.lo |= 1 << static_cast<int>(F);
     } else {
@@ -100,8 +100,8 @@ void Cpu::decReg16(Reg16 &reg) { reg.val--; }
 void Cpu::addReg16(uint16_t &dest, uint16_t &source) {
     uint32_t sum = source + dest;
     add16SetH(source, dest);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::C, (sum > 0xFFFF));
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::C, (sum > 0xFFFF));
     dest = sum & 0x0000FFFF;
 }
 
@@ -112,17 +112,17 @@ void Cpu::addReg16(uint16_t &dest, uint16_t &source) {
  */
 void Cpu::addSetH(uint8_t a, uint8_t b) {
     bool halfCarry = (a & 0x0F) + (b & 0x0F) > 0x0F;
-    writeFlag(Flag::H, halfCarry);
+    writeFlag(CPU_Flag::H, halfCarry);
 }
 
 void Cpu::add16SetH(uint16_t a, uint16_t b) {
     bool halfCarry = (a & 0x0FFF) + (b & 0x0FFF) > 0x0FFF;
-    writeFlag(Flag::H, halfCarry);
+    writeFlag(CPU_Flag::H, halfCarry);
 }
 
 void Cpu::subSetH(uint8_t a, uint8_t b) {
     bool halfCarry = (a & 0x0F) < (b & 0x0F);
-    writeFlag(Flag::H, halfCarry);
+    writeFlag(CPU_Flag::H, halfCarry);
 }
 
 /*
@@ -134,10 +134,10 @@ void Cpu::subSetH(uint8_t a, uint8_t b) {
 void Cpu::rotateLeftCarry(uint8_t &reg) {
     uint8_t oldBit7 = reg & 0x80;
     reg = (reg << 1) | (oldBit7 >> 7);
-    writeFlag(Flag::Z, 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::C, oldBit7 != 0);
+    writeFlag(CPU_Flag::Z, 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::C, oldBit7 != 0);
 }
 
 /*
@@ -147,29 +147,29 @@ void Cpu::rotateLeftCarry(uint8_t &reg) {
 void Cpu::rotateRightCarry(uint8_t &reg) {
     uint8_t oldBit0 = reg & 0x01;
     reg = (reg >> 1) | (oldBit0 << 7);
-    writeFlag(Flag::Z, 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::C, oldBit0 != 0);
+    writeFlag(CPU_Flag::Z, 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::C, oldBit0 != 0);
 }
 
 void Cpu::rotateLeft(uint8_t &reg) {
 
-    bool oldCarry = readFlag(Flag::C);
-    writeFlag(Flag::Z, 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::C, (reg & 0x80) >> 7);
+    bool oldCarry = readFlag(CPU_Flag::C);
+    writeFlag(CPU_Flag::Z, 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::C, (reg & 0x80) >> 7);
 
     reg = (reg << 1) | (static_cast<uint8_t>(oldCarry));
 }
 void Cpu::rotateRight(uint8_t &reg) {
 
-    bool oldCarry = readFlag(Flag::C);
-    writeFlag(Flag::Z, 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::C, (reg & 0x01));
+    bool oldCarry = readFlag(CPU_Flag::C);
+    writeFlag(CPU_Flag::Z, 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::C, (reg & 0x01));
 
     reg = (reg >> 1) | (static_cast<uint8_t>(oldCarry) << 7);
 }
@@ -178,12 +178,12 @@ void Cpu::rotateRight(uint8_t &reg) {
  * Perform an arithmetic left shift on register, filling in bit 0 with 0.
  */
 void Cpu::shiftLeftArithmetic(uint8_t &reg) {
-    writeFlag(Flag::C, (reg >> 7) & 0x01);
+    writeFlag(CPU_Flag::C, (reg >> 7) & 0x01);
     reg = reg << 1;
     reg &= 0xFE;
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::Z, reg == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::Z, reg == 0);
 }
 /*
  * Perform an arithmetic right shift on register, filling in bit 7 with the
@@ -191,34 +191,34 @@ void Cpu::shiftLeftArithmetic(uint8_t &reg) {
  */
 void Cpu::shiftRightArithmetic(uint8_t &reg) {
     uint8_t oldBit7 = reg & 0x80;
-    writeFlag(Flag::C, reg & 0x01);
+    writeFlag(CPU_Flag::C, reg & 0x01);
     reg = reg >> 1;
     reg |= oldBit7;
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::Z, reg == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::Z, reg == 0);
 }
 void Cpu::shiftRightLogical(uint8_t &reg) {
-    writeFlag(Flag::C, reg & 0x01);
+    writeFlag(CPU_Flag::C, reg & 0x01);
     reg = reg >> 1;
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::Z, reg == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::Z, reg == 0);
 }
 
 void Cpu::swapNibbles(uint8_t &reg) {
     uint8_t temp = reg;
     reg = 0 | ((reg & 0x0F) << 4) | ((reg & 0xF0) >> 4);
-    writeFlag(Flag::Z, reg == 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 0);
-    writeFlag(Flag::C, 0);
+    writeFlag(CPU_Flag::Z, reg == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 0);
+    writeFlag(CPU_Flag::C, 0);
 }
 
 void Cpu::copyBit(uint8_t &reg, int bitPos) {
-    writeFlag(Flag::Z, (reg & (1 << bitPos)) == 0);
-    writeFlag(Flag::N, 0);
-    writeFlag(Flag::H, 1);
+    writeFlag(CPU_Flag::Z, (reg & (1 << bitPos)) == 0);
+    writeFlag(CPU_Flag::N, 0);
+    writeFlag(CPU_Flag::H, 1);
 }
 
 void Cpu::resetBit(uint8_t &reg, int bitPos) { reg &= ~(1 << bitPos); }

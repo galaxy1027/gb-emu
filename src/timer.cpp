@@ -8,10 +8,10 @@ void Timer::init() {
 }
 
 /* Timer Tick
- *  Returns a value of true if an interrupt is requested.
+ *  Returns an IRQ bitmask with bit 2 (timer bit) set or cleared
  * */
-bool Timer::tick() {
-    bool request_interrupt = false;
+uint8_t Timer::tick() {
+    uint8_t IRQ = 0;
     uint16_t prev_div = DIV;
     DIV++;
     bool timer_update = false;
@@ -37,10 +37,10 @@ bool Timer::tick() {
         TIMA++;
         if (TIMA == 0x00) {
             TIMA = TMA;
-            request_interrupt = true;
+            IRQ |= (1 << 2);
         }
     }
-    return request_interrupt;
+    return IRQ;
 }
 
 uint8_t Timer::read(uint16_t addr) {
